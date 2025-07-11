@@ -8,22 +8,40 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Send, Volume2, Phone } from 'lucide-react';
+import { ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAgentTester } from '@/hooks/useAgentTester';
 
 const CreateAgent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
-  const [selectedVoice, setSelectedVoice] = useState('');
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
+  
+  // Используем хук для тестирования агента
+  const { 
+    isConnected, 
+    isRecording, 
+    connectionStatus, 
+    messages, 
+    connectToAgent, 
+    disconnectFromAgent 
+  } = useAgentTester();
 
+  // Реальные голоса из app.js
   const voices = [
-    { id: 'sarah', name: 'Sarah - Professional Female' },
-    { id: 'mike', name: 'Mike - Friendly Male' },
-    { id: 'emma', name: 'Emma - Warm Female' },
-    { id: 'alex', name: 'Alex - Energetic Male' }
+    { id: 'Nec_24000', name: 'Nec 24000' },
+    { id: 'Nec_8000', name: 'Nec 8000' },
+    { id: 'Bys_24000', name: 'Bys 24000' },
+    { id: 'Bys_8000', name: 'Bys 8000' }
+  ];
+
+  // Реальные модели из app.js
+  const models = [
+    { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
+    { id: 'openai/gpt-4o-mini', name: 'GPT-4 Mini' },
+    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: DeepSeek Chat v3' }
   ];
 
   const knowledgeBases = [
@@ -32,6 +50,29 @@ const CreateAgent = () => {
     { id: 'support', name: 'Support Documentation' },
     { id: 'hr', name: 'HR Policies & Procedures' }
   ];
+
+  // Системный промпт по умолчанию из app.js
+  const defaultSystemPrompt = `Говори только по делу, не многословно. Но проговаривай промежуточные результаты, в том числе результаты работы tools. Чтобы не было больших пауз в разговоре.
+
+Твоя задача найти клиента, в битриксе при обращении к тебе (getBitrixContact).
+    Если клиент не найден, то ты должен добавить его и заявку для него в битрикс (addContactWithDeal).
+        Перед тем как создать клиента в битриксе, клиент должен подтвердить, что ты правильно записал его имя, фамилию и телефон. Обязательно уточни это у клиента, после того как получил от него имя, фамилию и номер телефона.
+Если клиент найден, то ты должен найти заявку клиента, оставленную в битриксе (getBitrixDeal).
+    Если заявка не найдена, то ты должен добавить заявку для клиента в битрикс (addDeal).
+
+Затем, ты должен задать кандидату необходимые вопросы для подбора вакансии (getCandidateProfileQuestions).
+После того как ответы на вопросы получены, то должен подобрать подходящие вакансии (getCandidateVacancies).
+После того как вакансии подобраны, ты должен предложить кандидату выбрать одну из них.
+Если кандидат выбрал вакансию, то ты должен подтвердить его заявку на вакансию (applyCandidateVacancy).`;
+
+  const [agentConfig, setAgentConfig] = useState({
+    name: 'Оптимус Прайм',
+    role: 'Ты HR-менеджер, который проводит собеседования. Мужчина.',
+    model: 'anthropic/claude-3.5-sonnet',
+    voice: 'Bys_24000',
+    systemPrompt: defaultSystemPrompt,
+    maxTokens: 500
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +85,15 @@ const CreateAgent = () => {
 
   const handleTestAgent = () => {
     if (testMessage.trim()) {
-      setTestResponse(`This is a test response from your AI agent using ${selectedVoice ? voices.find(v => v.id === selectedVoice)?.name : 'default voice'} and ${selectedKnowledgeBase ? knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)?.name : 'no knowledge base'}. Original message: "${testMessage}"`);
+      setTestResponse(`This is a test response from your AI agent using ${agentConfig.voice ? voices.find(v => v.id === agentConfig.voice)?.name : 'default voice'} and ${selectedKnowledgeBase ? knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)?.name : 'no knowledge base'}. Original message: "${testMessage}"`);
     }
   };
 
   const handleListenVoice = () => {
-    if (selectedVoice) {
+    if (agentConfig.voice) {
       toast({
         title: "Voice Preview",
-        description: `Playing preview of ${voices.find(v => v.id === selectedVoice)?.name}`,
+        description: `Playing preview of ${voices.find(v => v.id === agentConfig.voice)?.name}`,
       });
     } else {
       toast({
@@ -63,11 +104,38 @@ const CreateAgent = () => {
     }
   };
 
-  const handleTestCall = () => {
-    toast({
-      title: "Test Call Initiated",
-      description: "A test call will be placed to your phone number shortly.",
-    });
+  const handleTestCall = async () => {
+    if (isConnected) {
+      // Если уже подключены, отключаемся
+      try {
+        await disconnectFromAgent();
+        toast({
+          title: "Отключено",
+          description: "Соединение с агентом разорвано",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка отключения",
+          description: "Не удалось отключиться от агента",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Если не подключены, подключаемся
+      try {
+        await connectToAgent(agentConfig);
+        toast({
+          title: "Подключение к агенту",
+          description: "Соединение с агентом установлено. Микрофон включен автоматически.",
+        });
+      } catch (error) {
+        toast({
+          title: "Ошибка подключения",
+          description: "Не удалось подключиться к агенту",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   return (
@@ -99,24 +167,38 @@ const CreateAgent = () => {
               <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
                 <div>
                   <Label htmlFor="name">Agent Name</Label>
-                  <Input id="name" placeholder="Enter agent name" required />
+                  <Input 
+                    id="name" 
+                    value={agentConfig.name}
+                    onChange={(e) => setAgentConfig({...agentConfig, name: e.target.value})}
+                    placeholder="Enter agent name" 
+                    required 
+                  />
                 </div>
 
                 <div>
                   <Label htmlFor="role">Role/Specialization</Label>
-                  <Textarea id="role" placeholder="Describe the agent's role, responsibilities, and areas of expertise in detail" required />
+                  <Textarea 
+                    id="role" 
+                    value={agentConfig.role}
+                    onChange={(e) => setAgentConfig({...agentConfig, role: e.target.value})}
+                    placeholder="Describe the agent's role, responsibilities, and areas of expertise in detail" 
+                    required 
+                  />
                 </div>
 
                 <div>
                   <Label htmlFor="model">AI Model</Label>
-                  <Select>
+                  <Select value={agentConfig.model} onValueChange={(value) => setAgentConfig({...agentConfig, model: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select AI model" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                      {models.map((model) => (
+                        <SelectItem key={model.id} value={model.id}>
+                          {model.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -124,7 +206,7 @@ const CreateAgent = () => {
                 <div>
                   <Label htmlFor="voice">Voice</Label>
                   <div className="flex space-x-2">
-                    <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                    <Select value={agentConfig.voice} onValueChange={(value) => setAgentConfig({...agentConfig, voice: value})}>
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Select voice" />
                       </SelectTrigger>
@@ -144,12 +226,24 @@ const CreateAgent = () => {
 
                 <div>
                   <Label htmlFor="instructions">System Instructions</Label>
-                  <Textarea id="instructions" placeholder="Provide specific instructions for how the agent should behave and respond" />
+                  <Textarea 
+                    id="instructions" 
+                    value={agentConfig.systemPrompt}
+                    onChange={(e) => setAgentConfig({...agentConfig, systemPrompt: e.target.value})}
+                    placeholder="Provide specific instructions for how the agent should behave and respond"
+                    className="min-h-[200px]"
+                  />
                 </div>
 
                 <div>
                   <Label htmlFor="max-tokens">Max Response Length</Label>
-                  <Input id="max-tokens" type="number" placeholder="500" />
+                  <Input 
+                    id="max-tokens" 
+                    type="number" 
+                    value={agentConfig.maxTokens}
+                    onChange={(e) => setAgentConfig({...agentConfig, maxTokens: parseInt(e.target.value) || 500})}
+                    placeholder="500" 
+                  />
                 </div>
 
                 <div className="flex justify-end space-x-4">
@@ -187,14 +281,47 @@ const CreateAgent = () => {
                     </Select>
                   </div>
                   
-                  <Button onClick={handleTestCall} className="w-full bg-green-600 hover:bg-green-700">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Test Call Agent
+                  <Button 
+                    onClick={handleTestCall} 
+                    className={`w-full ${isConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+                  >
+                    {isConnected ? <PhoneOff className="h-4 w-4 mr-2" /> : <Phone className="h-4 w-4 mr-2" />}
+                    {isConnected ? 'Завершить тест' : 'Тестировать агента'}
+                    {isRecording && <Mic className="h-4 w-4 ml-2" />}
                   </Button>
                 </div>
                 
+                {/* Статус подключения */}
+                <div className={`p-3 rounded-lg mb-4 text-sm font-medium ${
+                  isConnected 
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  Статус: {connectionStatus}
+                  {isRecording && (
+                    <span className="ml-2 inline-flex items-center">
+                      <span className="animate-pulse w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                      Запись
+                    </span>
+                  )}
+                </div>
+
                 <div className="border border-slate-200 rounded-lg p-4 h-64 mb-4 overflow-y-auto bg-slate-50">
-                  {testResponse ? (
+                  {messages.length > 0 ? (
+                    <div className="space-y-4">
+                      {messages.map((message, index) => (
+                        <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`p-3 rounded-lg max-w-xs ${
+                            message.sender === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white border border-slate-200 text-slate-900'
+                          }`}>
+                            {message.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : testResponse ? (
                     <div className="space-y-4">
                       <div className="flex justify-end">
                         <div className="bg-blue-600 text-white p-3 rounded-lg max-w-xs">
@@ -209,7 +336,10 @@ const CreateAgent = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-full text-slate-500">
-                      Send a test message to see how your agent responds
+                      {isConnected 
+                        ? 'Подключено к агенту. Говорите в микрофон для общения.' 
+                        : 'Нажмите "Тестировать агента" для начала голосового общения или отправьте текстовое сообщение'
+                      }
                     </div>
                   )}
                 </div>

@@ -19,4 +19,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    // Исключаем livekit-client из оптимизации Vite для избежания проблем с WebRTC
+    exclude: ['livekit-client'],
+  },
+  // Добавляем глобальные переменные для совместимости с WebRTC
+  define: {
+    global: 'globalThis',
+  },
 }));
