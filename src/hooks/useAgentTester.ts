@@ -10,7 +10,6 @@ interface AgentConfig {
   model: string;
   voice: string;
   systemPrompt: string;
-  maxTokens: number;
 }
 
 interface UseAgentTesterReturn {

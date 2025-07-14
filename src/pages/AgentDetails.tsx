@@ -1,40 +1,146 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings, Bot, MessageSquare, TrendingUp, Clock, Star, History } from 'lucide-react';
+import { getApiUrl } from '@/config/api';
+
+// API функция для получения агента
+const fetchAgent = async (id: string) => {
+  const response = await fetch(getApiUrl('agents/get'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch agent');
+  }
+  
+  return response.json();
+};
 
 const AgentDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [agent, setAgent] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    status: string;
+    version: number;
+    model?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const agent = {
-    id: id,
-    name: 'Sarah',
-    role: 'Sales Expert',
-    status: 'active',
+  useEffect(() => {
+    const loadAgent = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const agentData = await fetchAgent(id);
+        setAgent(agentData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load agent');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgent();
+  }, [id]);
+
+  // Моковые данные для полей, которых нет в API
+  const mockData = {
     conversations: 127,
     successRate: 91,
     avgResponse: '1.2s',
-    model: 'GPT-4 Turbo',
-    version: 'v2.1',
-    totalConversations: 1847,
     rating: 4.8,
-    uptime: '99.9%'
+    uptime: '99.9%',
+    totalConversations: 1847,
+    recentConversations: [
+      { id: 1, customer: 'John Smith', status: 'completed', duration: '5m 32s', result: 'success' },
+      { id: 2, customer: 'Emma Wilson', status: 'active', duration: '2m 15s', result: 'pending' },
+      { id: 3, customer: 'Mike Johnson', status: 'completed', duration: '8m 47s', result: 'success' },
+    ]
   };
-
-  const recentConversations = [
-    { id: 1, customer: 'John Smith', status: 'completed', duration: '5m 32s', result: 'success' },
-    { id: 2, customer: 'Emma Wilson', status: 'active', duration: '2m 15s', result: 'pending' },
-    { id: 3, customer: 'Mike Johnson', status: 'completed', duration: '8m 47s', result: 'success' },
-  ];
 
   const handleVersionHistory = () => {
     // Navigate to version history page or show modal
     console.log('Show version history for agent', id);
   };
+
+  const handleTestAgent = () => {
+    // Переход на страницу тестирования агента
+    navigate(`/agents/${id}/test`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-slate-600">Загрузка агента...</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <p className="text-red-600 mb-4">Ошибка загрузки агента: {error}</p>
+                <Button onClick={() => navigate('/agents')}>
+                  Вернуться к списку агентов
+                </Button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (!agent) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <p className="text-slate-600 mb-4">Агент не найден</p>
+                <Button onClick={() => navigate('/agents')}>
+                  Вернуться к списку агентов
+                </Button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -57,7 +163,7 @@ const AgentDetails = () => {
               <div className="flex items-center space-x-3">
                 <h1 className="text-2xl font-bold text-slate-900">{agent.name}</h1>
                 <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                  {agent.version}
+                  v{agent.version}
                 </span>
               </div>
               <p className="text-slate-600">{agent.role} - Performance Dashboard</p>
@@ -86,7 +192,7 @@ const AgentDetails = () => {
                 </span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{agent.conversations}</p>
+                <p className="text-2xl font-bold text-slate-900">{mockData.conversations}</p>
                 <p className="text-sm text-slate-600">Active Conversations</p>
               </div>
             </div>
@@ -99,7 +205,7 @@ const AgentDetails = () => {
                 <div className="text-green-600 text-sm font-medium">+5.2%</div>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{agent.successRate}%</p>
+                <p className="text-2xl font-bold text-slate-900">{mockData.successRate}%</p>
                 <p className="text-sm text-slate-600">Success Rate</p>
               </div>
             </div>
@@ -112,7 +218,7 @@ const AgentDetails = () => {
                 <div className="text-green-600 text-sm font-medium">-0.3s</div>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{agent.avgResponse}</p>
+                <p className="text-2xl font-bold text-slate-900">{mockData.avgResponse}</p>
                 <p className="text-sm text-slate-600">Avg Response Time</p>
               </div>
             </div>
@@ -125,7 +231,7 @@ const AgentDetails = () => {
                 <div className="text-green-600 text-sm font-medium">+0.2</div>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{agent.rating}</p>
+                <p className="text-2xl font-bold text-slate-900">{mockData.rating}</p>
                 <p className="text-sm text-slate-600">Customer Rating</p>
               </div>
             </div>
@@ -136,7 +242,7 @@ const AgentDetails = () => {
             <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Conversations</h3>
               <div className="space-y-4">
-                {recentConversations.map((conversation) => (
+                {mockData.recentConversations.map((conversation) => (
                   <div key={conversation.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -168,19 +274,19 @@ const AgentDetails = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-slate-600">AI Model</p>
-                  <p className="text-sm font-medium text-slate-900">{agent.model}</p>
+                  <p className="text-sm font-medium text-slate-900">{agent.model || 'GPT-4 Turbo'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">Version</p>
-                  <p className="text-sm font-medium text-blue-600">{agent.version}</p>
+                  <p className="text-sm font-medium text-blue-600">v{agent.version}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">Total Conversations</p>
-                  <p className="text-sm font-medium text-slate-900">{agent.totalConversations.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-slate-900">{mockData.totalConversations.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">Uptime</p>
-                  <p className="text-sm font-medium text-green-600">{agent.uptime}</p>
+                  <p className="text-sm font-medium text-green-600">{mockData.uptime}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-600">Specialization</p>
@@ -189,7 +295,7 @@ const AgentDetails = () => {
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <Button className="w-full mb-2 bg-blue-600 hover:bg-blue-700">
+                <Button className="w-full mb-2 bg-blue-600 hover:bg-blue-700" onClick={handleTestAgent}>
                   <Bot className="h-4 w-4 mr-2" />
                   Test Agent
                 </Button>

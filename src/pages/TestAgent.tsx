@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
+import { ArrowLeft, Send, Settings, Bot, MessageSquare, Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
 import { getApiUrl } from '@/config/api';
 
-// Интерфейс для создания агента
-interface CreateAgentData {
+// API функция для получения агента
+const fetchAgent = async (id: string) => {
+  const response = await fetch(getApiUrl('agents/get'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ id }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch agent');
+  }
+  
+  return response.json();
+};
+
+// Интерфейс для обновления агента
+interface UpdateAgentData {
   name: string;
   status: string;
   role: string;
@@ -22,14 +39,17 @@ interface CreateAgentData {
   systemPrompt: string;
 }
 
-// Функция для создания агента через API
-const createAgent = async (agentData: CreateAgentData): Promise<unknown> => {
+// API функция для обновления агента
+const updateAgent = async (id: string, agentData: UpdateAgentData): Promise<unknown> => {
   const response = await fetch(getApiUrl('agents/create'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(agentData),
+    body: JSON.stringify({
+      id,
+      ...agentData,
+    }),
   });
 
   if (!response.ok) {
@@ -40,14 +60,29 @@ const createAgent = async (agentData: CreateAgentData): Promise<unknown> => {
   return response.json();
 };
 
-const CreateAgent = () => {
+const TestAgent = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { toast } = useToast();
+  const [agent, setAgent] = useState<{
+    id: string;
+    name: string;
+    role: string;
+    status: string;
+    version: number;
+    model?: string;
+    systemPrompt?: string;
+    voice?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Состояние для тестирования
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
-  
+  const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
   // Используем хук для тестирования агента
   const { 
     isConnected, 
@@ -71,92 +106,68 @@ const CreateAgent = () => {
     { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: DeepSeek Chat v3' }
   ];
 
-  const knowledgeBases = [
-    { id: 'general', name: 'General Knowledge Base' },
-    { id: 'sales', name: 'Sales Training Materials' },
-    { id: 'support', name: 'Support Documentation' },
-    { id: 'hr', name: 'HR Policies & Procedures' }
-  ];
-
-  // Системный промпт по умолчанию из app.js
-  const defaultSystemPrompt = `Говори только по делу, не многословно. Но проговаривай промежуточные результаты, в том числе результаты работы tools. Чтобы не было больших пауз в разговоре.
-
-Твоя задача найти клиента, в битриксе при обращении к тебе (getBitrixContact).
-    Если клиент не найден, то ты должен добавить его и заявку для него в битрикс (addContactWithDeal).
-        Перед тем как создать клиента в битриксе, клиент должен подтвердить, что ты правильно записал его имя, фамилию и телефон. Обязательно уточни это у клиента, после того как получил от него имя, фамилию и номер телефона.
-Если клиент найден, то ты должен найти заявку клиента, оставленную в битриксе (getBitrixDeal).
-    Если заявка не найдена, то ты должен добавить заявку для клиента в битрикс (addDeal).
-
-Затем, ты должен задать кандидату необходимые вопросы для подбора вакансии (getCandidateProfileQuestions).
-После того как ответы на вопросы получены, то должен подобрать подходящие вакансии (getCandidateVacancies).
-После того как вакансии подобраны, ты должен предложить кандидату выбрать одну из них.
-Если кандидат выбрал вакансию, то ты должен подтвердить его заявку на вакансию (applyCandidateVacancy).`;
-
-  const [agentConfig, setAgentConfig] = useState({
-    name: 'Оптимус Прайм',
-    role: 'Ты HR-менеджер, который проводит собеседования. Мужчина.',
-    model: 'anthropic/claude-3.5-sonnet',
+  // Состояние для настроек
+  const [settings, setSettings] = useState({
+    name: '',
+    model: 'gpt-4',
+    systemPrompt: '',
+    role: '',
     voice: 'Bys_24000',
-    systemPrompt: defaultSystemPrompt,
-    maxTokens: 500
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
+  useEffect(() => {
+    const loadAgent = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        const agentData = await fetchAgent(id);
+        setAgent(agentData);
+        
+        // Загружаем настройки агента
+        setSettings({
+          name: agentData.name || '',
+          model: agentData.model || 'gpt-4',
+          systemPrompt: agentData.systemPrompt || '',
+          role: agentData.role || '',
+          voice: agentData.voice || 'Bys_24000',
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load agent');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgent();
+  }, [id]);
+
+  const handleSendMessage = async () => {
+    if (!testMessage.trim()) return;
+
+    const userMessage = testMessage;
+    setTestMessage('');
+    setIsLoadingResponse(true);
 
     try {
-      // Подготавливаем данные для API
-      const agentData: CreateAgentData = {
-        name: agentConfig.name,
-        status: 'active', // По умолчанию активный статус
-        role: agentConfig.role,
-        model: agentConfig.model,
-        voice: agentConfig.voice,
-        systemPrompt: agentConfig.systemPrompt,
-      };
-
-      const createdAgent = await createAgent(agentData);
-
-      toast({
-        title: "Агент создан",
-        description: `Агент "${agentConfig.name}" успешно создан!`,
-      });
+      // Здесь будет API вызов для отправки сообщения агенту
+      // Пока что симулируем ответ
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Перенаправляем на страницу агентов
-      navigate('/agents');
-    } catch (error) {
-      console.error('Ошибка создания агента:', error);
-      toast({
-        title: "Ошибка создания агента",
-        description: error instanceof Error ? error.message : "Не удалось создать агента",
-        variant: "destructive"
-      });
+      const mockResponse = `Это тестовый ответ от агента "${agent?.name}" на сообщение: "${userMessage}". Агент настроен на роль: ${settings.role}`;
+      
+      setTestResponse(mockResponse);
+    } catch (err) {
+      setTestResponse('Ошибка при получении ответа от агента');
     } finally {
-      setIsCreating(false);
+      setIsLoadingResponse(false);
     }
   };
 
-  const handleTestAgent = () => {
-    // if (testMessage.trim()) {
-    //   setTestResponse(`This is a test response from your AI agent using ${
-    //     agentConfig.voice ? voices.find(v => v.id === agentConfig.voice)?.name : 'default voice'
-    //   }. Original message: "${testMessage}"`);
-    // }
-  };
-
-  const handleListenVoice = () => {
-    if (agentConfig.voice) {
-      toast({
-        title: "Voice Preview",
-        description: `Playing preview of ${voices.find(v => v.id === agentConfig.voice)?.name}`,
-      });
-    } else {
-      toast({
-        title: "No Voice Selected",
-        description: "Please select a voice first to preview it.",
-        variant: "destructive"
-      });
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -179,7 +190,13 @@ const CreateAgent = () => {
       }
     } else {
       try {
-        await connectToAgent(agentConfig);
+        await connectToAgent({
+          name: settings.name,
+          role: settings.role,
+          model: settings.model,
+          voice: settings.voice,
+          systemPrompt: settings.systemPrompt,
+        });
 
         toast({
           title: "Подключение к агенту",
@@ -195,6 +212,95 @@ const CreateAgent = () => {
     }
   };
 
+  const handleListenVoice = () => {
+    if (settings.voice) {
+      toast({
+        title: "Voice Preview",
+        description: `Playing preview of ${voices.find(v => v.id === settings.voice)?.name}`,
+      });
+    } else {
+      toast({
+        title: "No Voice Selected",
+        description: "Please select a voice first to preview it.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!id) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Подготавливаем данные для API
+      const agentData = {
+        name: settings.name,
+        status: agent?.status || 'active',
+        role: settings.role,
+        model: settings.model,
+        voice: settings.voice,
+        systemPrompt: settings.systemPrompt,
+      };
+
+      await updateAgent(id, agentData);
+
+      toast({
+        title: "Настройки сохранены",
+        description: "Настройки агента успешно обновлены",
+      });
+    } catch (error) {
+      console.error('Ошибка сохранения агента:', error);
+      toast({
+        title: "Ошибка сохранения",
+        description: error instanceof Error ? error.message : "Не удалось сохранить настройки агента",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-slate-600">Загрузка агента...</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <p className="text-red-600 mb-4">Ошибка загрузки агента: {error}</p>
+                <Button onClick={() => navigate('/agents')}>
+                  Вернуться к списку агентов
+                </Button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
@@ -206,30 +312,29 @@ const CreateAgent = () => {
           <div className="flex items-center mb-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/agents')}
+              onClick={() => navigate(`/agents/${id}`)}
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Agents
+              Back to Agent
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Create AI Agent</h1>
-              <p className="text-slate-600">Configure your intelligent assistant</p>
+              <h1 className="text-2xl font-bold text-slate-900">Test Agent: {agent?.name}</h1>
+              <p className="text-slate-600">Test and configure your agent settings</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Agent Configuration */}
             <div>
-              <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
                 <div>
                   <Label htmlFor="name">Agent Name</Label>
                   <Input 
                     id="name" 
-                    value={agentConfig.name}
-                    onChange={(e) => setAgentConfig({...agentConfig, name: e.target.value})}
-                    placeholder="Enter agent name" 
-                    required 
+                    value={agent?.name || ''}
+                    disabled
+                    className="bg-slate-50"
                   />
                 </div>
 
@@ -237,16 +342,15 @@ const CreateAgent = () => {
                   <Label htmlFor="role">Role/Specialization</Label>
                   <Textarea 
                     id="role" 
-                    value={agentConfig.role}
-                    onChange={(e) => setAgentConfig({...agentConfig, role: e.target.value})}
+                    value={settings.role}
+                    onChange={(e) => setSettings({...settings, role: e.target.value})}
                     placeholder="Describe the agent's role, responsibilities, and areas of expertise in detail" 
-                    required 
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="model">AI Model</Label>
-                  <Select value={agentConfig.model} onValueChange={(value) => setAgentConfig({...agentConfig, model: value})}>
+                  <Select value={settings.model} onValueChange={(value) => setSettings({...settings, model: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select AI model" />
                     </SelectTrigger>
@@ -263,7 +367,7 @@ const CreateAgent = () => {
                 <div>
                   <Label htmlFor="voice">Voice</Label>
                   <div className="flex space-x-2">
-                    <Select value={agentConfig.voice} onValueChange={(value) => setAgentConfig({...agentConfig, voice: value})}>
+                    <Select value={settings.voice} onValueChange={(value) => setSettings({...settings, voice: value})}>
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Select voice" />
                       </SelectTrigger>
@@ -281,63 +385,38 @@ const CreateAgent = () => {
                   </div>
                 </div>
 
+
+
                 <div>
                   <Label htmlFor="instructions">System Instructions</Label>
                   <Textarea 
                     id="instructions" 
-                    value={agentConfig.systemPrompt}
-                    onChange={(e) => setAgentConfig({...agentConfig, systemPrompt: e.target.value})}
+                    value={settings.systemPrompt}
+                    onChange={(e) => setSettings({...settings, systemPrompt: e.target.value})}
                     placeholder="Provide specific instructions for how the agent should behave and respond"
                     className="min-h-[200px]"
                   />
                 </div>
 
-                {/* <div>
-                  <Label htmlFor="max-tokens">Max Response Length</Label>
-                  <Input 
-                    id="max-tokens" 
-                    type="number" 
-                    value={agentConfig.maxTokens}
-                    onChange={(e) => setAgentConfig({...agentConfig, maxTokens: parseInt(e.target.value) || 500})}
-                    placeholder="500" 
-                  />
-                </div> */}
-
                 <div className="flex justify-end space-x-4">
-                  <Button type="button" variant="outline" onClick={() => navigate('/agents')}>
+                  <Button type="button" variant="outline" onClick={() => navigate(`/agents/${id}`)}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isCreating}>
-                    <Bot className="h-4 w-4 mr-2" />
-                    {isCreating ? 'Создание...' : 'Create Agent'}
+                  <Button onClick={handleSaveSettings} className="bg-blue-600 hover:bg-blue-700" disabled={isSaving}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    {isSaving ? 'Сохранение...' : 'Save Settings'}
                   </Button>
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Test Agent */}
             <div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Test Agent</h3>
-                <p className="text-slate-600 mb-4">Test your agent configuration before creating it</p>
+                <p className="text-slate-600 mb-4">Test your agent configuration with voice or text</p>
                 
                 <div className="space-y-4 mb-4">
-                  {/*<div>
-                    <Label>Knowledge Base</Label>
-                    <Select value={selectedKnowledgeBase} onValueChange={setSelectedKnowledgeBase}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select knowledge base" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {knowledgeBases.map((kb) => (
-                          <SelectItem key={kb.id} value={kb.id}>
-                            {kb.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>*/}
-                  
                   <Button 
                     onClick={handleCall} 
                     className={`w-full ${isConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
@@ -403,13 +482,13 @@ const CreateAgent = () => {
 
                 <div className="flex space-x-2">
                   <Input
-                    disabled={true}
                     placeholder="Type a test message..."
                     value={testMessage}
                     onChange={(e) => setTestMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleTestAgent()}
+                    onKeyPress={handleKeyPress}
+                    disabled={isConnected}
                   />
-                  <Button onClick={handleTestAgent} disabled={!testMessage.trim()}>
+                  <Button onClick={handleSendMessage} disabled={!testMessage.trim() || isConnected}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -422,4 +501,4 @@ const CreateAgent = () => {
   );
 };
 
-export default CreateAgent;
+export default TestAgent; 

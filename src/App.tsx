@@ -11,6 +11,7 @@ import NewCampaign from "./pages/NewCampaign";
 import AICampaignWizard from "./pages/AICampaignWizard";
 import Agents from "./pages/Agents";
 import AgentDetails from "./pages/AgentDetails";
+import TestAgent from "./pages/TestAgent";
 import CreateAgent from "./pages/CreateAgent";
 import Conversations from "./pages/Conversations";
 import ConversationDetails from "./pages/ConversationDetails";
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/agents" element={<Agents />} />
           <Route path="/agents/create" element={<CreateAgent />} />
           <Route path="/agents/:id" element={<AgentDetails />} />
+          <Route path="/agents/:id/test" element={<TestAgent />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/conversations/:id/:type" element={<ConversationDetails />} />
           <Route path="/auto-sending" element={<AutoSending />} />
