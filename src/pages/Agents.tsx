@@ -57,6 +57,22 @@ const fetchAgents = async (params: GetAgentsParams = {}): Promise<AgentsResponse
   return response.json();
 };
 
+// Функция для обновления статуса агента
+const updateAgentStatus = async (agentId: string, status: string): Promise<void> => {
+  const response = await fetch(getApiUrl('agents/update-status'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ agentId, status }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+};
+
 const Agents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -84,7 +100,7 @@ const Agents = () => {
       setAgents(response.data);
       
       // Вычисляем статистику
-      const activeAgents = response.data.filter(agent => agent.status === 'active').length;
+      const activeAgents = response.data.filter(agent => getAgentStatus(agent) === 'active').length;
       setStats({
         total: response.total,
         active: activeAgents,
@@ -127,7 +143,7 @@ const Agents = () => {
 
   // Функция для получения статуса агента
   const getAgentStatus = (agent: Agent) => {
-    return agent.status || 'idle';
+    return agent?.status || 'idle';
   };
 
   // Функция для получения цвета статуса
@@ -141,6 +157,47 @@ const Agents = () => {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Функция для переключения статуса агента
+  const handleToggleStatus = async (agent: Agent, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const currentStatus = getAgentStatus(agent);
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    
+    try {
+      await updateAgentStatus(agent.id, newStatus);
+      
+      // Обновляем статус в локальном состоянии
+      setAgents(prevAgents => 
+        prevAgents.map(a => 
+          a.id === agent.id 
+            ? { ...a, status: newStatus }
+            : a
+        )
+      );
+      
+      // Обновляем статистику
+      setStats(prevStats => ({
+        ...prevStats,
+        active: newStatus === 'active' 
+          ? prevStats.active + 1 
+          : prevStats.active - 1
+      }));
+      
+      toast({
+        title: "Статус обновлен",
+        description: `Агент ${agent.name} теперь ${newStatus === 'active' ? 'активен' : 'неактивен'}`,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось обновить статус агента';
+      toast({
+        title: "Ошибка обновления",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 
@@ -286,10 +343,21 @@ const Agents = () => {
                     <div className="flex justify-between items-center pt-4 border-t border-slate-200">
                       <span className="text-xs text-slate-500">Создан {formatDate(agent.createdAt)}</span>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            navigate(`/agents/${agent.id}/test`);
+                          }}
+                        >
                           <Settings className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => handleToggleStatus(agent, e)}
+                        >
                           {getAgentStatus(agent) === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         </Button>
                       </div>
