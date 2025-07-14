@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -11,13 +10,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
+import { getApiUrl } from '@/config/api';
+
+// Интерфейс для создания агента
+interface CreateAgentData {
+  name: string;
+  status: string;
+  role: string;
+  specialization: string;
+  model: string;
+  voice: string;
+  systemPrompt: string;
+}
+
+// Функция для создания агента через API
+const createAgent = async (agentData: CreateAgentData): Promise<unknown> => {
+  const response = await fetch(getApiUrl('agents/create'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(agentData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
 
 const CreateAgent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
   
   // Используем хук для тестирования агента
   const { 
@@ -29,7 +59,6 @@ const CreateAgent = () => {
     disconnectFromAgent 
   } = useAgentTester();
 
-  // Реальные голоса из app.js
   const voices = [
     { id: 'Nec_24000', name: 'Nec 24000' },
     { id: 'Nec_8000', name: 'Nec 8000' },
@@ -37,7 +66,6 @@ const CreateAgent = () => {
     { id: 'Bys_8000', name: 'Bys 8000' }
   ];
 
-  // Реальные модели из app.js
   const models = [
     { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
     { id: 'openai/gpt-4o-mini', name: 'GPT-4 Mini' },
@@ -74,19 +102,49 @@ const CreateAgent = () => {
     maxTokens: 500
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Agent Created",
-      description: "Your new AI agent has been created successfully.",
-    });
-    navigate('/agents');
+    setIsCreating(true);
+
+    try {
+      // Подготавливаем данные для API
+      const agentData: CreateAgentData = {
+        name: agentConfig.name,
+        status: 'active', // По умолчанию активный статус
+        role: agentConfig.role,
+        specialization: agentConfig.role, // Используем role как specialization
+        model: agentConfig.model,
+        voice: agentConfig.voice,
+        systemPrompt: agentConfig.systemPrompt,
+      };
+
+      const createdAgent = await createAgent(agentData);
+
+      toast({
+        title: "Агент создан",
+        description: `Агент "${agentConfig.name}" успешно создан!`,
+      });
+      
+      // Перенаправляем на страницу агентов
+      navigate('/agents');
+    } catch (error) {
+      console.error('Ошибка создания агента:', error);
+      toast({
+        title: "Ошибка создания агента",
+        description: error instanceof Error ? error.message : "Не удалось создать агента",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleTestAgent = () => {
-    if (testMessage.trim()) {
-      setTestResponse(`This is a test response from your AI agent using ${agentConfig.voice ? voices.find(v => v.id === agentConfig.voice)?.name : 'default voice'} and ${selectedKnowledgeBase ? knowledgeBases.find(kb => kb.id === selectedKnowledgeBase)?.name : 'no knowledge base'}. Original message: "${testMessage}"`);
-    }
+    // if (testMessage.trim()) {
+    //   setTestResponse(`This is a test response from your AI agent using ${
+    //     agentConfig.voice ? voices.find(v => v.id === agentConfig.voice)?.name : 'default voice'
+    //   }. Original message: "${testMessage}"`);
+    // }
   };
 
   const handleListenVoice = () => {
@@ -104,11 +162,12 @@ const CreateAgent = () => {
     }
   };
 
-  const handleTestCall = async () => {
+  const handleCall = async () => {
     if (isConnected) {
       // Если уже подключены, отключаемся
       try {
         await disconnectFromAgent();
+
         toast({
           title: "Отключено",
           description: "Соединение с агентом разорвано",
@@ -121,9 +180,9 @@ const CreateAgent = () => {
         });
       }
     } else {
-      // Если не подключены, подключаемся
       try {
         await connectToAgent(agentConfig);
+
         toast({
           title: "Подключение к агенту",
           description: "Соединение с агентом установлено. Микрофон включен автоматически.",
@@ -235,7 +294,7 @@ const CreateAgent = () => {
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <Label htmlFor="max-tokens">Max Response Length</Label>
                   <Input 
                     id="max-tokens" 
@@ -244,15 +303,15 @@ const CreateAgent = () => {
                     onChange={(e) => setAgentConfig({...agentConfig, maxTokens: parseInt(e.target.value) || 500})}
                     placeholder="500" 
                   />
-                </div>
+                </div> */}
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={() => navigate('/agents')}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isCreating}>
                     <Bot className="h-4 w-4 mr-2" />
-                    Create Agent
+                    {isCreating ? 'Создание...' : 'Create Agent'}
                   </Button>
                 </div>
               </form>
@@ -265,7 +324,7 @@ const CreateAgent = () => {
                 <p className="text-slate-600 mb-4">Test your agent configuration before creating it</p>
                 
                 <div className="space-y-4 mb-4">
-                  <div>
+                  {/*<div>
                     <Label>Knowledge Base</Label>
                     <Select value={selectedKnowledgeBase} onValueChange={setSelectedKnowledgeBase}>
                       <SelectTrigger>
@@ -279,10 +338,10 @@ const CreateAgent = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div>*/}
                   
                   <Button 
-                    onClick={handleTestCall} 
+                    onClick={handleCall} 
                     className={`w-full ${isConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
                   >
                     {isConnected ? <PhoneOff className="h-4 w-4 mr-2" /> : <Phone className="h-4 w-4 mr-2" />}
@@ -346,6 +405,7 @@ const CreateAgent = () => {
 
                 <div className="flex space-x-2">
                   <Input
+                    disabled={true}
                     placeholder="Type a test message..."
                     value={testMessage}
                     onChange={(e) => setTestMessage(e.target.value)}

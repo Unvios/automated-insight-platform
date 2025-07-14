@@ -85,47 +85,46 @@ export const useAgentTester = (): UseAgentTesterReturn => {
 
       // Подключаемся к LiveKit
       const room = new Room();
-      // roomRef.current = room;
+      roomRef.current = room;
 
-      // // Слушаем события подключения участников
-      // room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
-      //   console.log(`Участник подключился: ${participant.identity}`);
-      //   addMessage(`Участник ${participant.identity} присоединился`, 'bot');
-      // });
+      // Слушаем события подключения участников
+      room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
+        console.log(`Участник подключился: ${participant.identity}`);
+        addMessage(`Участник ${participant.identity} присоединился`, 'bot');
+      });
 
-      // // Слушаем события отключения участников
-      // room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
-      //   console.log(`Участник вышел: ${participant.identity}`);
-      //   addMessage(`Участник ${participant.identity} покинул разговор`, 'bot');
-      // });
+      // Слушаем события отключения участников
+      room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
+        console.log(`Участник вышел: ${participant.identity}`);
+        addMessage(`Участник ${participant.identity} покинул разговор`, 'bot');
+      });
 
-      // // Обрабатываем аудио треки от агента (как в строках 75-87 app.js)
-      // room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: TrackPublication, participant: RemoteParticipant) => {
-      //   if (track.kind === 'audio') {
-      //     const audioTrack = track;
-      //     const audioElement = audioTrack.attach(); // создаёт <audio> элемент
+      // Обрабатываем аудио треки от агента (как в строках 75-87 app.js)
+      room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack, publication: TrackPublication, participant: RemoteParticipant) => {
+        if (track.kind === 'audio') {
+          const audioTrack = track;
+          const audioElement = audioTrack.attach(); // создаёт <audio> элемент
 
-      //     audioElement.autoplay = true;
-      //     audioElement.play().catch(console.error);
+          audioElement.autoplay = true;
+          audioElement.play().catch(console.error);
 
-      //     // Добавляем элемент в DOM (скрыто)
-      //     audioElement.style.display = 'none';
-      //     document.body.appendChild(audioElement);
+          // Добавляем элемент в DOM (скрыто)
+          audioElement.style.display = 'none';
+          document.body.appendChild(audioElement);
 
-      //     // Удаляем элемент когда трек завершается
-      //     track.on('ended', () => {
-      //       if (audioElement.parentNode) {
-      //         audioElement.parentNode.removeChild(audioElement);
-      //       }
-      //     });
-      //   }
-      // });
+          // Удаляем элемент когда трек завершается
+          track.on('ended', () => {
+            if (audioElement.parentNode) {
+              audioElement.parentNode.removeChild(audioElement);
+            }
+          });
+        }
+      });
 
       // Получаем URL LiveKit сервера из конфигурации
       const livekitUrl = getLivekitUrl();
 
       console.log(`Подключаемся к LiveKit: ${livekitUrl}`);
-      console.log(`Подключаемся к token: ${token}`);
 
       await room.connect(livekitUrl, token);
       setConnectionStatus(`Подключено к комнате: ${roomNameRef.current}`);
