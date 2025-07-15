@@ -169,7 +169,12 @@ const ConversationDetails = () => {
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
                   {conversation?.type === 'call' ? 'Call' : 'Chat'} Summary
                 </h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{summary}</p>
+                <div 
+                  className="text-slate-600 text-sm leading-relaxed whitespace-pre-line"
+                  dangerouslySetInnerHTML={{ 
+                    __html: summary?.replace(/\n/g, '<br>') || '' 
+                  }}
+                />
               </div>
 
               {/* Next Actions */}
