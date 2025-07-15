@@ -5,6 +5,7 @@ import { getApiUrlWithDemo, getLivekitUrl, logApiConfig } from '@/config/api';
 setLogLevel('debug');
 
 interface AgentConfig {
+  id?: string;
   name: string;
   role: string;
   model: string;
@@ -67,6 +68,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
           roomName: roomNameRef.current,
           participantName: participantName,
           metadata: JSON.stringify({
+            agentId: config.id,
             agentName: config.name,
             agentRole: config.role,
             agentModel: config.model,

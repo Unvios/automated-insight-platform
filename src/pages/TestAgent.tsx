@@ -200,6 +200,7 @@ const TestAgent = () => {
     } else {
       try {
         await connectToAgent({
+          id: agent.id,
           name: settings.name,
           role: settings.role,
           model: settings.model,
