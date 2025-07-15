@@ -15,7 +15,6 @@ import { getApiUrl } from '@/config/api';
 // Интерфейс для создания агента
 interface CreateAgentData {
   name: string;
-  status: string;
   role: string;
   model: string;
   voice: string;
@@ -24,7 +23,7 @@ interface CreateAgentData {
 
 // Функция для создания агента через API
 const createAgent = async (agentData: CreateAgentData): Promise<unknown> => {
-  const response = await fetch(getApiUrl('agents/create'), {
+  const response = await fetch(getApiUrl('agents/create-one'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -109,14 +108,13 @@ const CreateAgent = () => {
       // Подготавливаем данные для API
       const agentData: CreateAgentData = {
         name: agentConfig.name,
-        status: 'active', // По умолчанию активный статус
         role: agentConfig.role,
         model: agentConfig.model,
         voice: agentConfig.voice,
         systemPrompt: agentConfig.systemPrompt,
       };
 
-      const createdAgent = await createAgent(agentData);
+      await createAgent(agentData);
 
       toast({
         title: "Агент создан",

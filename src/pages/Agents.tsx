@@ -41,7 +41,7 @@ interface GetAgentsParams {
 
 // Функция для получения агентов с сервера
 const fetchAgents = async (params: GetAgentsParams = {}): Promise<AgentsResponse> => {
-  const response = await fetch(getApiUrl('agents/list'), {
+  const response = await fetch(getApiUrl('agents/find-many-latest'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ const fetchAgents = async (params: GetAgentsParams = {}): Promise<AgentsResponse
 
 // Функция для обновления статуса агента
 const updateAgentStatus = async (agentId: string, status: string): Promise<void> => {
-  const response = await fetch(getApiUrl('agents/update-status'), {
+  const response = await fetch(getApiUrl('agents/update-status-one'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

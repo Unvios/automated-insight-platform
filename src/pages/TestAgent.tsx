@@ -14,12 +14,12 @@ import { getApiUrl } from '@/config/api';
 
 // API функция для получения агента
 const fetchAgent = async (id: string) => {
-  const response = await fetch(getApiUrl('agents/get'), {
+  const response = await fetch(getApiUrl('agents/find-one-latest'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ agentId: id }),
   });
   
   if (!response.ok) {
@@ -32,7 +32,6 @@ const fetchAgent = async (id: string) => {
 // Интерфейс для обновления агента
 interface UpdateAgentData {
   name: string;
-  status: string;
   role: string;
   model: string;
   voice: string;
@@ -41,13 +40,13 @@ interface UpdateAgentData {
 
 // API функция для обновления агента
 const updateAgent = async (id: string, agentData: UpdateAgentData): Promise<unknown> => {
-  const response = await fetch(getApiUrl('agents/create'), {
+  const response = await fetch(getApiUrl('agents/create-one'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      id,
+      agentId: id,
       ...agentData,
     }),
   });
@@ -236,7 +235,6 @@ const TestAgent = () => {
       // Подготавливаем данные для API
       const agentData = {
         name: settings.name,
-        status: agent?.status || 'active',
         role: settings.role,
         model: settings.model,
         voice: settings.voice,

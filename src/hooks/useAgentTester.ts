@@ -58,7 +58,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       // Создаем токен для подключения
       const participantName = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
 
-      const response = await fetch(getApiUrlWithDemo('api/token'), {
+      const response = await fetch(getApiUrlWithDemo('token/generate-one'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
         throw new Error('Ошибка получения токена');
       }
 
-      const { token } = await response.json();
+      const token = await response.text();
 
       // Подключаемся к LiveKit
       const room = new Room();

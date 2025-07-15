@@ -9,12 +9,12 @@ import { getApiUrl } from '@/config/api';
 
 // API функция для получения агента
 const fetchAgent = async (id: string) => {
-  const response = await fetch(getApiUrl('agents/get'), {
+  const response = await fetch(getApiUrl('agents/find-one-latest'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ id }),
+    body: JSON.stringify({ agentId: id }),
   });
   
   if (!response.ok) {
