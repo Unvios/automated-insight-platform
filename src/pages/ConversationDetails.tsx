@@ -1,49 +1,43 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { useConversation } from '@/hooks/useConversations';
+import { Message } from '@/services/conversations';
 
 const ConversationDetails = () => {
   const navigate = useNavigate();
   const { id, type } = useParams();
+  const [newMessage, setNewMessage] = useState('');
 
-  const conversation = {
-    id: id,
-    customer: 'John Smith',
-    agent: 'Sarah',
-    status: 'active',
-    type: type || 'chat',
-    startTime: '2:30 PM',
-    duration: '12 min',
-    sentiment: 'positive',
-    rating: 5,
-    targetAchieved: true,
-    goal: 'Resolve billing issue'
-  };
+  const {
+    conversation,
+    messages,
+    loading,
+    error,
+  } = useConversation(id);
 
-  const messages = [
-    { id: 1, sender: 'customer', text: 'Hi, I need help with my billing issue', time: '2:30 PM' },
-    { id: 2, sender: 'agent', text: 'Hello! I\'d be happy to help you with your billing concern. Can you please provide me with your account number?', time: '2:31 PM' },
-    { id: 3, sender: 'customer', text: 'Sure, it\'s AC-12345678', time: '2:32 PM' },
-    { id: 4, sender: 'agent', text: 'Thank you! I can see your account now. I notice there was a duplicate charge on your last invoice. Let me fix that for you right away.', time: '2:33 PM' },
-    { id: 5, sender: 'customer', text: 'That would be great, thank you!', time: '2:34 PM' },
-    { id: 6, sender: 'agent', text: 'I\'ve processed a refund for the duplicate charge. You should see it in your account within 3-5 business days. Is there anything else I can help you with?', time: '2:40 PM' },
-    { id: 7, sender: 'customer', text: 'No, that\'s perfect. Thanks for helping me with the billing issue!', time: '2:41 PM' }
-  ];
-
+  // Моковые данные для демонстрации
   const nextActions = [
     { id: 1, action: 'Add lead to CRM', status: 'success', datetime: '17-05-2025 16:43', type: 'success' },
     { id: 2, action: 'Send follow-up email', status: 'pending', datetime: '17-05-2025 17:00', type: 'pending' },
     { id: 3, action: 'Update customer segment', status: 'failed', datetime: '17-05-2025 16:45', type: 'error' }
   ];
 
-  const summary = conversation.type === 'call' 
+  const summary = conversation?.summary || (conversation?.type === 'call' 
     ? "Customer called regarding a billing issue with a duplicate charge on their invoice. The agent successfully identified the problem, processed a refund, and provided clear timeline expectations. The customer was satisfied with the resolution."
-    : "Customer contacted support via chat about a billing discrepancy. Agent quickly identified and resolved the duplicate charge issue, processing a refund and explaining the timeline. Issue resolved successfully with high customer satisfaction.";
+    : "Customer contacted support via chat about a billing discrepancy. Agent quickly identified and resolved the duplicate charge issue, processing a refund and explaining the timeline. Issue resolved successfully with high customer satisfaction.");
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !conversation) return;
+    // TODO: Implement message sending when API is ready
+    console.log('Sending message as user:', newMessage);
+    setNewMessage('');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -64,10 +58,10 @@ const ConversationDetails = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
-                {conversation.type === 'call' ? 'Call' : 'Chat'} Details
+                {conversation?.type === 'call' ? 'Call' : 'Chat'} Details
               </h1>
               <p className="text-slate-600">
-                {conversation.customer} → {conversation.agent}
+                {conversation?.customer} → {conversation?.agentName}
               </p>
             </div>
           </div>
@@ -78,37 +72,49 @@ const ConversationDetails = () => {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Conversation Info</h3>
               
               <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <User className="h-5 w-5 text-slate-600" />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{conversation.customer}</p>
-                    <p className="text-xs text-slate-500">Customer</p>
+                                  <div className="flex items-center space-x-3">
+                    <User className="h-5 w-5 text-slate-600" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{conversation?.customer || 'Unknown'}</p>
+                      <p className="text-xs text-slate-500">Customer</p>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Bot className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{conversation.agent}</p>
-                    <p className="text-xs text-slate-500">AI Agent</p>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Bot className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{conversation?.agentName || 'Unknown'}</p>
+                      <p className="text-xs text-slate-500">AI Agent</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-5 w-5 text-slate-600" />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{conversation.startTime}</p>
-                    <p className="text-xs text-slate-500">Duration: {conversation.duration}</p>
+                  <div className="flex items-center space-x-3">
+                    <Clock className="h-5 w-5 text-slate-600" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        {conversation?.startTime ? new Date(conversation.startTime).toLocaleString() : 'Unknown'}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Duration: {conversation?.durationMs ? `${Math.round(conversation.durationMs / 1000)}s` : 'Unknown'}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center space-x-3">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">Rating: {conversation.rating}/5</p>
-                    <p className="text-xs text-slate-500 capitalize">{conversation.sentiment} sentiment</p>
+                  <div className="flex items-center space-x-3">
+                    <Star className="h-5 w-5 text-yellow-500" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        Rating: {conversation?.rating ? `${conversation.rating}/5` : 'No rating'}
+                      </p>
+                      <p className={`text-xs capitalize ${
+                        conversation?.sentiment === 'positive' ? 'text-green-600' :
+                        conversation?.sentiment === 'negative' ? 'text-red-600' :
+                        'text-slate-500'
+                      }`}>
+                        {conversation?.sentiment || 'neutral'} sentiment
+                      </p>
+                    </div>
                   </div>
-                </div>
               </div>
 
               {/* Analysis Result */}
@@ -116,17 +122,17 @@ const ConversationDetails = () => {
                 <h4 className="text-sm font-semibold text-slate-900 mb-3">Result Analysis</h4>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    {conversation.targetAchieved ? 
+                    {conversation?.targetAchieved ? 
                       <CheckCircle className="h-4 w-4 text-green-600" /> : 
                       <XCircle className="h-4 w-4 text-red-600" />
                     }
-                    <span className={`text-sm font-medium ${conversation.targetAchieved ? 'text-green-600' : 'text-red-600'}`}>
-                      {conversation.targetAchieved ? 'Target Achieved' : 'Target Not Achieved'}
+                    <span className={`text-sm font-medium ${conversation?.targetAchieved ? 'text-green-600' : 'text-red-600'}`}>
+                      {conversation?.targetAchieved ? 'Target Achieved' : 'Target Not Achieved'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600">Goal: {conversation.goal}</p>
+                  <p className="text-xs text-slate-600">Goal: {conversation?.goal || 'Resolve customer issue'}</p>
                   <p className="text-xs text-slate-600">
-                    Recommendation: Follow up within 24 hours to ensure customer satisfaction
+                    Recommendation: {conversation?.recommendation || 'Follow up within 24 hours to ensure customer satisfaction'}
                   </p>
                   <Button variant="outline" size="sm" className="w-full mt-2">
                     <Eye className="h-4 w-4 mr-2" />
@@ -135,36 +141,39 @@ const ConversationDetails = () => {
                 </div>
               </div>
 
-              {conversation.type === 'call' && (
+              {conversation?.type === 'call' && (
                 <div className="mt-6 pt-6 border-t border-slate-200">
                   <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
                     <Play className="h-4 w-4 mr-2" />
                     Listen Call
                   </Button>
-                  <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
+                  {/* <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
                     <Phone className="h-4 w-4 mr-2" />
                     Call Back
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Video className="h-4 w-4 mr-2" />
-                    Video Call
-                  </Button>
+                  </Button> */}
                 </div>
               )}
             </div>
 
             {/* Chat/Call Content */}
             <div className="lg:col-span-3 space-y-6">
+              {/* Error Display */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              )}
+
               {/* Summary */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                  {conversation.type === 'call' ? 'Call' : 'Chat'} Summary
+                  {conversation?.type === 'call' ? 'Call' : 'Chat'} Summary
                 </h3>
                 <p className="text-slate-600 text-sm leading-relaxed">{summary}</p>
               </div>
 
               {/* Next Actions */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              {/* <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Next Actions</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -205,44 +214,63 @@ const ConversationDetails = () => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              </div> */}
 
               {/* Messages/Transcript */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
                 <div className="p-6 border-b border-slate-200">
                   <h3 className="text-lg font-semibold text-slate-900">
-                    {conversation.type === 'call' ? 'Call Transcript' : 'Chat Messages'}
+                    {conversation?.type === 'call' ? 'Call Transcript' : 'Chat Messages'}
                   </h3>
                 </div>
 
-                <div className="flex-1 p-6 space-y-4 max-h-96 overflow-y-auto">
-                  {messages.map((message) => (
-                    <div key={message.id} className={`flex ${message.sender === 'customer' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.sender === 'customer' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-slate-100 text-slate-900'
-                      }`}>
-                        <p className="text-sm">{message.text}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.sender === 'customer' ? 'text-blue-100' : 'text-slate-500'
-                        }`}>
-                          {message.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {conversation.type === 'chat' && conversation.status === 'active' && (
-                  <div className="p-6 border-t border-slate-200">
-                    <div className="flex space-x-2">
-                      <Input placeholder="Type your message..." className="flex-1" />
-                      <Button className="bg-blue-600 hover:bg-blue-700">
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
+                {loading ? (
+                  <div className="flex-1 p-6 flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                    <span className="ml-2 text-slate-600">Loading messages...</span>
                   </div>
+                ) : (
+                  <>
+                    <div className="flex-1 p-6 space-y-4 max-h-96 overflow-y-auto">
+                      {messages.map((message) => (
+                        <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            message.sender === 'user' 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-slate-100 text-slate-900'
+                          }`}>
+                            <p className="text-sm">{message.text}</p>
+                            <p className={`text-xs mt-1 ${
+                              message.sender === 'user' ? 'text-blue-100' : 'text-slate-500'
+                            }`}>
+                              {new Date(message.time).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {conversation?.type === 'chat' && conversation.status === 'active' && (
+                      <div className="p-6 border-t border-slate-200">
+                        <div className="flex space-x-2">
+                          <Input 
+                            placeholder="Type your message..." 
+                            className="flex-1"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                          />
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={handleSendMessage}
+                            disabled={!newMessage.trim()}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
