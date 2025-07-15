@@ -17,7 +17,7 @@ interface UseAgentTesterReturn {
   isRecording: boolean;
   connectionStatus: string;
   messages: Array<{ text: string; sender: 'user' | 'bot' }>;
-  connectToAgent: (config: AgentConfig) => Promise<void>;
+  connectToAgent: (config: AgentConfig) => Promise<Room>;
   disconnectFromAgent: () => Promise<void>;
   addMessage: (text: string, sender: 'user' | 'bot') => void;
 }
@@ -135,10 +135,50 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       // Автоматически включаем микрофон после подключения
       await startRecording(room);
 
+      // Добавляем обработчик текстовых сообщений
+      room.on(RoomEvent.DataReceived, (payload: Uint8Array, participant: unknown, _, topic: string) => {
+        console.log(`Получены данные от ${(participant as { identity: string }).identity}, топик: ${topic}`);
+
+        if (topic === 'text-message') {
+          try {
+            const textData = JSON.parse(new TextDecoder().decode(payload));
+            console.log('Получено текстовое сообщение:', textData);
+
+            // Добавляем сообщение в чат в зависимости от типа
+            if (textData.role === 'user') {
+              addMessage(textData.content, 'user');
+            } else if (textData.role === 'assistant') {
+              addMessage(textData.content, 'bot');
+            } else {
+              // По умолчанию считаем сообщением от бота
+              addMessage(textData.content, 'bot');
+            }
+          } catch (error) {
+            console.error('Ошибка обработки текстового сообщения:', error);
+            addMessage('Ошибка обработки сообщения', 'bot');
+          }
+        } else if (topic === 'chat') {
+          // Обработка обычных чат сообщений
+          try {
+            const message = new TextDecoder().decode(payload);
+            console.log('Получено чат сообщение:', message);
+            addMessage(message, 'bot');
+          } catch (error) {
+            console.error('Ошибка обработки чат сообщения:', error);
+          }
+        } else {
+          // Логируем неизвестные топики для отладки
+          console.log(`Неизвестный топик данных: ${topic}`);
+        }
+      });
+
+      return room;
+
     } catch (error) {
       console.error('Ошибка подключения:', error);
       setConnectionStatus('Ошибка подключения');
       addMessage('Ошибка подключения: ' + (error as Error).message, 'bot');
+      throw error;
     }
   }, [generateRoomName, addMessage]);
 

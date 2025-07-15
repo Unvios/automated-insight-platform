@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -92,6 +92,9 @@ const TestAgent = () => {
     disconnectFromAgent 
   } = useAgentTester();
 
+  // Ref для прокрутки чата в конец
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
   const voices = [
     { id: 'Nec_24000', name: 'Nec 24000' },
     { id: 'Nec_8000', name: 'Nec 8000' },
@@ -169,6 +172,13 @@ const TestAgent = () => {
       handleSendMessage();
     }
   };
+
+  // Автоматическая прокрутка чата в конец при новых сообщениях
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleCall = async () => {
     if (isConnected) {
@@ -440,7 +450,7 @@ const TestAgent = () => {
                   )}
                 </div>
 
-                <div className="border border-slate-200 rounded-lg p-4 h-64 mb-4 overflow-y-auto bg-slate-50">
+                <div ref={chatContainerRef} className="border border-slate-200 rounded-lg p-4 h-64 mb-4 overflow-y-auto bg-slate-50">
                   {messages.length > 0 ? (
                     <div className="space-y-4">
                       {messages.map((message, index) => (
@@ -448,7 +458,7 @@ const TestAgent = () => {
                           <div className={`p-3 rounded-lg max-w-xs ${
                             message.sender === 'user'
                               ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-slate-200 text-slate-900'
+                              : 'bg-gray-100 text-gray-900'
                           }`}>
                             {message.text}
                           </div>
@@ -463,7 +473,7 @@ const TestAgent = () => {
                         </div>
                       </div>
                       <div className="flex justify-start">
-                        <div className="bg-white border border-slate-200 p-3 rounded-lg max-w-xs">
+                        <div className="bg-gray-100 text-gray-900 p-3 rounded-lg max-w-xs">
                           {testResponse}
                         </div>
                       </div>
