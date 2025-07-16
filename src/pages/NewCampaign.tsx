@@ -45,19 +45,11 @@ const NewCampaign = () => {
   };
 
   const segments = [
-    'Enterprise Customers',
-    'SMB Customers',
-    'Trial Users',
-    'Premium Users',
-    'Churned Users',
-    'New Leads'
+    'Mock Segment',
   ];
 
   const kbOptions = [
-    'Main Description Only',
-    'Product Documentation',
-    'FAQ Collection',
-    'All Documents'
+    'Mock Knowledge Base',
   ];
 
   return (
@@ -109,7 +101,7 @@ const NewCampaign = () => {
               <div>
                 <Label htmlFor="target">Target Audience</Label>
                 <select id="target" name="target" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                  <option value="">Select target segment</option>
+                  <option value="">Select target audience</option>
                   {segments.map((segment) => (
                     <option key={segment} value={segment}>{segment}</option>
                   ))}
@@ -119,7 +111,7 @@ const NewCampaign = () => {
               <div>
                 <Label htmlFor="agent">Choose Agent</Label>
                 <select id="agent" name="agent" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required disabled={loadingAgents}>
-                  <option value="">{loadingAgents ? 'Loading agents...' : 'Select an AI agent'}</option>
+                  <option value="">Select agent</option>
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name} ({agent.role})
@@ -131,7 +123,7 @@ const NewCampaign = () => {
               <div>
                 <Label htmlFor="knowledge">Knowledge Base Usage</Label>
                 <select id="knowledge" name="knowledge" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                  <option value="">Select knowledge base option</option>
+                  <option value="">Select knowledge base</option>
                   {kbOptions.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}

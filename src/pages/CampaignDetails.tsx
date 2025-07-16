@@ -117,7 +117,7 @@ const CampaignDetails = () => {
               <p className="text-slate-600">Campaign Details & Performance</p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => navigate(`/campaigns/${campaign.id}/edit`)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit
               </Button>

@@ -143,7 +143,10 @@ const Campaigns = () => {
                               <Play className="h-4 w-4" />
                             )}
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
+                          <Button variant="ghost" size="sm" onClick={(e) => { 
+                            e.stopPropagation(); 
+                            navigate(`/campaigns/${campaign.id}/edit`);
+                          }}>
                             Edit
                           </Button>
                         </div>

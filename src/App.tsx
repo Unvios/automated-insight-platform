@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import NewCampaign from "./pages/NewCampaign";
+import EditCampaign from "./pages/EditCampaign";
 import AICampaignWizard from "./pages/AICampaignWizard";
 import Agents from "./pages/Agents";
 import AgentDetails from "./pages/AgentDetails";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/new" element={<NewCampaign />} />
           <Route path="/campaigns/:id" element={<CampaignDetails />} />
+          <Route path="/campaigns/:id/edit" element={<EditCampaign />} />
           <Route path="/ai-campaign-wizard" element={<AICampaignWizard />} />
           <Route path="/agents" element={<Agents />} />
           <Route path="/agents/create" element={<CreateAgent />} />
