@@ -1,49 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Plus, Play, Pause, BarChart3 } from 'lucide-react';
+import { useCampaigns } from '@/hooks/useCampaigns';
 
 const Campaigns = () => {
   const navigate = useNavigate();
-
-  const campaigns = [
-    {
-      id: 1,
-      name: 'Spring Promotion 2024',
-      status: 'active',
-      contacts: 15247,
-      engaged: 4832,
-      conversions: 267,
-      budget: '$5,000',
-      spent: '$1,847',
-      roi: '2,349%'
-    },
-    {
-      id: 2,
-      name: 'Customer Retention',
-      status: 'paused',
-      contacts: 8930,
-      engaged: 2156,
-      conversions: 89,
-      budget: '$3,000',
-      spent: '$967',
-      roi: '1,245%'
-    },
-    {
-      id: 3,
-      name: 'Product Launch Q2',
-      status: 'draft',
-      contacts: 0,
-      engaged: 0,
-      conversions: 0,
-      budget: '$8,000',
-      spent: '$0',
-      roi: '0%'
-    }
-  ];
+  const { campaigns, loading, total, updateCampaign } = useCampaigns();
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -77,7 +44,7 @@ const Campaigns = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Total Campaigns</p>
-                  <p className="text-2xl font-bold text-slate-900">12</p>
+                  <p className="text-2xl font-bold text-slate-900">{total}</p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-blue-500" />
               </div>
@@ -86,7 +53,9 @@ const Campaigns = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600">Active Now</p>
-                  <p className="text-2xl font-bold text-green-600">3</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {campaigns.filter(c => c.status === 'active').length}
+                  </p>
                 </div>
                 <Play className="h-8 w-8 text-green-500" />
               </div>
@@ -140,18 +109,39 @@ const Campaigns = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                        {campaign.engaged.toLocaleString()} ({Math.round((campaign.engaged/campaign.contacts)*100)}%)
+                        {campaign.engagedContacts.toLocaleString()} ({campaign.totalContacts > 0 ? Math.round((campaign.engagedContacts/campaign.totalContacts)*100) : 0}%)
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                        {campaign.spent} / {campaign.budget}
+                        ${campaign.spent.toLocaleString()} / ${campaign.budget.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        {campaign.roi}
+                        {campaign.conversions}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
-                            {campaign.status === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={async (e) => { 
+                              e.stopPropagation(); 
+                              setUpdatingStatus(campaign.id);
+                              try {
+                                await updateCampaign(campaign.id, { 
+                                  status: campaign.status === 'active' ? 'paused' : 'active' 
+                                });
+                              } finally {
+                                setUpdatingStatus(null);
+                              }
+                            }}
+                            disabled={updatingStatus === campaign.id}
+                          >
+                            {updatingStatus === campaign.id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                            ) : campaign.status === 'active' ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
                           </Button>
                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); }}>
                             Edit
