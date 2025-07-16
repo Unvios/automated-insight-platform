@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Pause, Settings, Users, MessageSquare, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Settings, Users, MessageSquare, TrendingUp, DollarSign, Phone } from 'lucide-react';
 import { campaignsApi, Campaign } from '@/services/campaigns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -120,6 +120,14 @@ const CampaignDetails = () => {
               <Button variant="outline" onClick={() => navigate(`/campaigns/${campaign.id}/edit`)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.open(`/campaigns/${campaign.id}/agent`, '_blank')}
+                disabled={campaign.status !== 'active'}
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                Call To Agent
               </Button>
               <Button 
                 className="bg-blue-600 hover:bg-blue-700" 
