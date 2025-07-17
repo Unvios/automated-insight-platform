@@ -123,7 +123,7 @@ const CampaignDetails = () => {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => window.open(`/campaigns/${campaign.id}/agent`, '_blank')}
+                onClick={() => window.open(`${import.meta.env.VITE_BASE_PATH}/campaigns/${campaign.id}/agent`, '_blank')}
                 disabled={campaign.status !== 'active'}
               >
                 <Phone className="h-4 w-4 mr-2" />
