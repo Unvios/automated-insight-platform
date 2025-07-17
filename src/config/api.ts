@@ -29,14 +29,21 @@ const getApiConfig = (): ApiConfig => {
     };
   }
   
-  // Продакшн - используем текущий домен
+  // Продакшн - используем nginx proxy для API и прямой доступ для LiveKit
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
+  const port = window.location.port;
   const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
   
+  // В Docker окружении API запросы идут через nginx proxy
+  const apiBaseUrl = envApiUrl || `${protocol}//${hostname}${port ? `:${port}` : ''}/api`;
+  
+  // LiveKit использует прямой доступ к сервису
+  const livekitUrl = envLivekitUrl || `${wsProtocol}//${hostname}:7002`;
+  
   return {
-    apiBaseUrl: envApiUrl || `${protocol}//${hostname}`,
-    livekitUrl: envLivekitUrl || `${wsProtocol}//${hostname}/demo/livekit/`
+    apiBaseUrl,
+    livekitUrl
   };
 };
 
@@ -49,6 +56,7 @@ export const logApiConfig = (): void => {
     livekitUrl: API_CONFIG.livekitUrl,
     environment: import.meta.env.MODE,
     hostname: window.location.hostname,
+    port: window.location.port,
     envVariables: {
       VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'не задана',
       VITE_LIVEKIT_URL: import.meta.env.VITE_LIVEKIT_URL || 'не задана'
