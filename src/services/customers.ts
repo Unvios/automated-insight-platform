@@ -1,0 +1,139 @@
+import { getApiUrl } from '@/config/api';
+
+// Типы данных
+export interface Customer {
+    id: string
+    firstName?: string
+    lastName?: string
+    phoneNumber: string
+    segment: string
+    notes?: string
+    status: string
+    lastContactAt?: string
+    createdAt: string
+    updatedAt: string
+    deletedAt?: string
+}
+
+export interface CustomersResponse {
+  data: Customer[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// API методы
+export const customersApi = {
+  // Получить список клиентов
+  async findMany(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    segment?: string;
+  } = {}): Promise<CustomersResponse> {
+    // Фильтруем undefined и пустые строки
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
+    );
+    
+    const response = await fetch(getApiUrl('customers/find-many'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(filteredParams),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch customers: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Получить клиента по ID
+  async findOne(customerId: string): Promise<Customer> {
+    const response = await fetch(getApiUrl('customers/find-one'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ customerId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch customer: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Создать клиента
+  async create(data: {
+    customerId?: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber: string;
+    segment: string;
+    notes?: string;
+    status: string;
+    lastContactAt?: string;
+  }): Promise<Customer> {
+    const response = await fetch(getApiUrl('customers/create-one'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create customer: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Обновить клиента
+  async update(customerId: string, data: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    segment?: string;
+    notes?: string;
+    status?: string;
+    lastContactAt?: string;
+  }): Promise<Customer> {
+    const response = await fetch(getApiUrl('customers/update-one'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        customerId,
+        ...data,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update customer: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Удалить клиента
+  async delete(customerId: string): Promise<void> {
+    const response = await fetch(getApiUrl('customers/delete-one'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ customerId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete customer: ${response.statusText}`);
+    }
+  },
+}; 

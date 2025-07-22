@@ -18,18 +18,10 @@ import {
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
   { name: 'AI Agents', href: '/agents', icon: Bot },
   { name: 'Conversations', href: '/conversations', icon: MessageSquare },
-  { name: 'Auto Sending', href: '/auto-sending', icon: Clock },
-  { name: 'Channels', href: '/channels', icon: Radio },
   { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen },
-  { name: 'Team', href: '/team', icon: UserPlus },
-  { name: 'Reports', href: '/reports', icon: TrendingUp },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 const Sidebar = () => {

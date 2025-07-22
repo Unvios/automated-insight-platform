@@ -17,21 +17,12 @@ import TestAgent from "./pages/TestAgent";
 import CreateAgent from "./pages/CreateAgent";
 import Conversations from "./pages/Conversations";
 import ConversationDetails from "./pages/ConversationDetails";
-import AutoSending from "./pages/AutoSending";
-import Channels from "./pages/Channels";
 import Customers from "./pages/Customers";
 import AddCustomer from "./pages/AddCustomer";
-import KnowledgeBase from "./pages/KnowledgeBase";
-import AddDocument from "./pages/AddDocument";
-import Team from "./pages/Team";
-import Analytics from "./pages/Analytics";
+import CustomerDetails from "./pages/CustomerDetails";
+import EditCustomer from "./pages/EditCustomer";
 import AgentPerformanceReview from "./pages/AgentPerformanceReview";
-import Settings from "./pages/Settings";
-import Billing from "./pages/Billing";
-import Integrations from "./pages/Integrations";
 import NotFound from "./pages/NotFound";
-import Reports from "./pages/Reports";
-import SendingRuleDetails from "./pages/SendingRuleDetails";
 
 const queryClient = new QueryClient();
 
@@ -57,20 +48,11 @@ const App = () => (
           <Route path="/agents/:id/test" element={<TestAgent />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/conversations/:id/:type" element={<ConversationDetails />} />
-          <Route path="/auto-sending" element={<AutoSending />} />
-          <Route path="/auto-sending/:id" element={<SendingRuleDetails />} />
-          <Route path="/channels" element={<Channels />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/customers/add" element={<AddCustomer />} />
-          <Route path="/knowledge-base" element={<KnowledgeBase />} />
-          <Route path="/knowledge-base/add-document" element={<AddDocument />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/customers/:customerId" element={<CustomerDetails />} />
+          <Route path="/customers/:customerId/edit" element={<EditCustomer />} />
           <Route path="/agent-performance-review" element={<AgentPerformanceReview />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/billing" element={<Billing />} />
-          <Route path="/settings/integrations" element={<Integrations />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -88,7 +88,9 @@ const EditCampaign = () => {
   };
 
   const segments = [
-    'Mock Segment',
+    'Bitrix',
+    'CSV', 
+    'Добавлены вручную',
   ];
 
   const kbOptions = [

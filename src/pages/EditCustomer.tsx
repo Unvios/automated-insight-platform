@@ -1,21 +1,23 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, Save, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers } from '@/hooks/useCustomers';
+import { Customer } from '@/services/customers';
 
-const AddCustomer = () => {
+const EditCustomer = () => {
+  const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { createCustomer } = useCustomers();
-  const [loading, setLoading] = useState(false);
+  const { getCustomer, updateCustomer } = useCustomers();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,6 +27,31 @@ const AddCustomer = () => {
     notes: '',
     status: 'new',
   });
+
+  useEffect(() => {
+    if (customerId) {
+      loadCustomer();
+    }
+  }, [customerId]);
+
+  const loadCustomer = async () => {
+    try {
+      setLoading(true);
+      const customer = await getCustomer(customerId!);
+      setFormData({
+        firstName: customer.firstName || '',
+        lastName: customer.lastName || '',
+        phoneNumber: customer.phoneNumber,
+        segment: customer.segment,
+        notes: customer.notes || '',
+        status: customer.status,
+      });
+    } catch (error) {
+      navigate('/customers');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -37,18 +64,18 @@ const AddCustomer = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.phoneNumber || !formData.segment) {
+    if (!formData.phoneNumber || !formData.segment || !formData.status) {
       toast({
         title: "Validation Error",
-        description: "Phone number and segment are required fields.",
+        description: "Phone number, segment and status are required fields.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      setLoading(true);
-      await createCustomer({
+      setSaving(true);
+      await updateCustomer(customerId!, {
         firstName: formData.firstName || undefined,
         lastName: formData.lastName || undefined,
         phoneNumber: formData.phoneNumber,
@@ -57,13 +84,29 @@ const AddCustomer = () => {
         status: formData.status,
       });
       
-      navigate('/customers');
+      navigate(`/customers/${customerId}`);
     } catch (error) {
       // Error handling is done in the hook
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="text-slate-500">Loading...</div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -76,15 +119,15 @@ const AddCustomer = () => {
           <div className="flex items-center mb-8">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/customers')}
+              onClick={() => navigate(`/customers/${customerId}`)}
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Customers
+              Back to Customer
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Add New Customer</h1>
-              <p className="text-slate-600">Create a new customer profile</p>
+              <h1 className="text-2xl font-bold text-slate-900">Edit Customer</h1>
+              <p className="text-slate-600">Update customer information</p>
             </div>
           </div>
 
@@ -127,19 +170,19 @@ const AddCustomer = () => {
 
               <div>
                 <Label htmlFor="segment">Customer Segment *</Label>
-                                  <select 
-                    id="segment" 
-                    name="segment"
-                    value={formData.segment}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    required
-                  >
-                    <option value="">Select segment</option>
-                    <option value="Bitrix">Bitrix</option>
-                    <option value="CSV">CSV</option>
-                    <option value="Добавлены вручную">Добавлены вручную</option>
-                  </select>
+                <select 
+                  id="segment" 
+                  name="segment"
+                  value={formData.segment}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  required
+                >
+                  <option value="">Select segment</option>
+                  <option value="Bitrix">Bitrix</option>
+                  <option value="CSV">CSV</option>
+                  <option value="Добавлены вручную">Добавлены вручную</option>
+                </select>
               </div>
 
               <div>
@@ -157,18 +200,18 @@ const AddCustomer = () => {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => navigate('/customers')}
-                  disabled={loading}
+                  onClick={() => navigate(`/customers/${customerId}`)}
+                  disabled={saving}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   className="bg-blue-600 hover:bg-blue-700"
-                  disabled={loading}
+                  disabled={saving}
                 >
-                  <User className="h-4 w-4 mr-2" />
-                  {loading ? 'Adding...' : 'Add Customer'}
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </Button>
               </div>
             </form>
@@ -179,4 +222,4 @@ const AddCustomer = () => {
   );
 };
 
-export default AddCustomer;
+export default EditCustomer; 
