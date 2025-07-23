@@ -136,4 +136,44 @@ export const customersApi = {
       throw new Error(`Failed to delete customer: ${response.statusText}`);
     }
   },
+
+  // Импортировать клиентов из CSV
+  async importCsv(
+    file: File,
+    options: {
+      segment?: string;
+      status?: string;
+      notes?: string;
+    } = {}
+  ): Promise<{
+    totalRows: number;
+    importedCount: number;
+    skippedCount: number;
+    errors: string[];
+    executionTimeMs: number;
+  }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    if (options.segment) {
+      formData.append('segment', options.segment);
+    }
+    if (options.status) {
+      formData.append('status', options.status);
+    }
+    if (options.notes) {
+      formData.append('notes', options.notes);
+    }
+
+    const response = await fetch(getApiUrl('customers/import-csv'), {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to import CSV: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
 }; 

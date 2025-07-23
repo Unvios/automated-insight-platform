@@ -6,17 +6,65 @@ import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Settings, Users, Eye, Edit, Phone } from 'lucide-react';
+import { Plus, Search, Filter, Settings, Users, Eye, Edit, Phone, Upload, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Customer } from '@/services/customers';
+import CsvImportModal from '@/components/CsvImportModal';
 
 const Customers = () => {
   const navigate = useNavigate();
-  const { customers, loading, pagination, filters, fetchCustomers } = useCustomers();
+  const { customers, loading, pagination, filters, fetchCustomers, importCsv, deleteCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
 
   const handleFilterChange = (filterType: 'status' | 'segment', value: string) => {
-    fetchCustomers({ [filterType]: value || undefined });
+    fetchCustomers({ [filterType]: value || undefined, page: 1 });
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // При поиске сбрасываем на первую страницу
+    if (value !== searchTerm) {
+      fetchCustomers({ page: 1 });
+    }
+  };
+
+  const handleCsvImport = async (file: File) => {
+    try {
+      setImporting(true);
+      await importCsv(file, {
+        segment: 'CSV',
+        status: 'new',
+      });
+    } catch (error) {
+      console.error('Import failed:', error);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (customerId: string) => {
+    if (!confirm('Are you sure you want to delete this customer?')) {
+      return;
+    }
+
+    try {
+      setDeletingCustomerId(customerId);
+      await deleteCustomer(customerId);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setDeletingCustomerId(null);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    fetchCustomers({ page: newPage });
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    fetchCustomers({ page: 1, limit: newLimit });
   };
 
   const getStatusColor = (status: string) => {
@@ -55,7 +103,10 @@ const Customers = () => {
     });
   };
 
+  // Фильтрация по поиску (если нужно, можно перенести на сервер)
   const filteredCustomers = customers.filter(customer => {
+    if (!searchTerm) return true;
+    
     const searchLower = searchTerm.toLowerCase();
     const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.toLowerCase();
     const phone = customer.phoneNumber.toLowerCase();
@@ -88,6 +139,10 @@ const Customers = () => {
                 <Settings className="h-4 w-4 mr-2" />
                 Integrate CRM
               </Button>
+              <CsvImportModal 
+                onImport={handleCsvImport}
+                importing={importing}
+              />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={() => navigate('/customers/add')}
@@ -119,7 +174,7 @@ const Customers = () => {
                 <Input
                   placeholder="Search customers by name or phone..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -236,6 +291,16 @@ const Customers = () => {
                               <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleDeleteCustomer(customer.id)}
+                              disabled={deletingCustomerId === customer.id}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              {deletingCustomerId === customer.id ? 'Deleting...' : 'Delete'}
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -250,6 +315,75 @@ const Customers = () => {
                 </div>
               )}
             </div>
+
+            {/* Пагинация */}
+            {!loading && pagination.total > 0 && (
+              <div className="bg-white px-6 py-4 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-slate-700">
+                      Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
+                      {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
+                      {pagination.total} customers
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-slate-700">Show:</span>
+                      <select
+                        value={pagination.limit}
+                        onChange={(e) => handleLimitChange(Number(e.target.value))}
+                        className="border border-slate-300 rounded px-2 py-1 text-sm"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page <= 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, Math.ceil(pagination.total / pagination.limit)) }, (_, i) => {
+                        const page = i + 1;
+                        const isCurrentPage = page === pagination.page;
+                        
+                        return (
+                          <Button
+                            key={page}
+                            variant={isCurrentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(page)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>

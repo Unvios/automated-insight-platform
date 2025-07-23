@@ -21,7 +21,7 @@ const AddCustomer = () => {
     firstName: '',
     lastName: '',
     phoneNumber: '',
-    segment: '',
+    segment: 'Добавлены вручную',
     notes: '',
     status: 'new',
   });

@@ -156,6 +156,39 @@ export const useCustomers = () => {
     }
   };
 
+  const importCsv = async (
+    file: File,
+    options: {
+      segment?: string;
+      status?: string;
+      notes?: string;
+    } = {}
+  ) => {
+    try {
+      const result = await customersApi.importCsv(file, options);
+      
+      toast({
+        title: "Import Completed",
+        description: `Imported ${result.importedCount} customers. ${result.skippedCount} skipped.`,
+      });
+
+      if (result.errors.length > 0) {
+        console.warn('Import errors:', result.errors);
+      }
+
+      fetchCustomers(); // Обновляем список
+      return result;
+    } catch (error) {
+      console.error('Failed to import CSV:', error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import CSV file",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
   }, []);
@@ -171,5 +204,6 @@ export const useCustomers = () => {
     updateCustomer,
     deleteCustomer,
     getCustomer,
+    importCsv,
   };
 }; 
