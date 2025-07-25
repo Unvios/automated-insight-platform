@@ -81,6 +81,11 @@ const AgentDetails = () => {
     navigate(`/agents/${id}/test`);
   };
 
+  const handleEditAgent = () => {
+    // Переход на страницу редактирования агента
+    navigate(`/agents/${id}/test`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50">
@@ -173,7 +178,7 @@ const AgentDetails = () => {
                 <History className="h-4 w-4 mr-2" />
                 Version History
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleEditAgent}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit Agent
               </Button>

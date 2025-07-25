@@ -10,6 +10,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useAgents } from '@/hooks/useAgents';
+import { useAllKnowledgeBases } from '@/hooks/useAllKnowledgeBases';
 import { campaignsApi, Campaign } from '@/services/campaigns';
 
 const EditCampaign = () => {
@@ -18,9 +19,13 @@ const EditCampaign = () => {
   const { toast } = useToast();
   const { updateCampaign } = useCampaigns();
   const { agents, loading: loadingAgents } = useAgents();
+  const { knowledgeBases, loading: loadingKnowledgeBases } = useAllKnowledgeBases();
   const [loading, setLoading] = useState(false);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loadingCampaign, setLoadingCampaign] = useState(true);
+  const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<string>('');
+  const [selectedTargetAudience, setSelectedTargetAudience] = useState<string>('');
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
 
   // Загружаем данные кампании при монтировании компонента
   useEffect(() => {
@@ -31,6 +36,9 @@ const EditCampaign = () => {
         setLoadingCampaign(true);
         const campaignData = await campaignsApi.findOne(id);
         setCampaign(campaignData);
+        setSelectedKnowledgeBaseId(campaignData.knowledgeBaseId || '');
+        setSelectedTargetAudience(campaignData.targetAudience || '');
+        setSelectedAgentId(campaignData.agentId || '');
       } catch (error) {
         console.error('Failed to fetch campaign:', error);
         toast({
@@ -55,9 +63,9 @@ const EditCampaign = () => {
     
     try {
       const formData = new FormData(e.target as HTMLFormElement);
-      const targetAudience = formData.get('target') as string;
-      const agentId = formData.get('agent') as string;
-      const knowledgeBaseId = formData.get('knowledge') as string;
+      const targetAudience = selectedTargetAudience;
+      const agentId = selectedAgentId;
+      const knowledgeBaseId = selectedKnowledgeBaseId;
       
       const campaignData = {
         name: formData.get('name') as string,
@@ -66,7 +74,7 @@ const EditCampaign = () => {
         durationMs: Number(formData.get('duration')) * 24 * 60 * 60 * 1000, // конвертируем дни в миллисекунды
         ...(targetAudience && { targetAudience }),
         ...(agentId && { agentId }),
-        ...(knowledgeBaseId && { knowledgeBaseId }),
+        ...(knowledgeBaseId ? { knowledgeBaseId } : { knowledgeBaseId: null }),
       };
 
       await updateCampaign(id, campaignData);
@@ -93,9 +101,7 @@ const EditCampaign = () => {
     'Добавлены вручную',
   ];
 
-  const kbOptions = [
-    'Mock Knowledge Base',
-  ];
+
 
   if (loadingCampaign) {
     return (
@@ -206,7 +212,8 @@ const EditCampaign = () => {
                   id="target" 
                   name="target" 
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  value={campaign?.targetAudience || ''}
+                  value={selectedTargetAudience}
+                  onChange={(e) => setSelectedTargetAudience(e.target.value)}
                   required
                 >
                   <option value="">Select target audience</option>
@@ -222,7 +229,8 @@ const EditCampaign = () => {
                   id="agent" 
                   name="agent" 
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  value={campaign?.agentId || ''}
+                  value={selectedAgentId}
+                  onChange={(e) => setSelectedAgentId(e.target.value)}
                   required 
                   disabled={loadingAgents}
                 >
@@ -236,17 +244,18 @@ const EditCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="knowledge">Knowledge Base Usage</Label>
+                <Label htmlFor="knowledge">Knowledge Base Usage (Optional)</Label>
                 <select 
                   id="knowledge" 
                   name="knowledge" 
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  value={campaign?.knowledgeBaseId || ''}
-                  required
+                  value={selectedKnowledgeBaseId}
+                  onChange={(e) => setSelectedKnowledgeBaseId(e.target.value)}
+                  disabled={loadingKnowledgeBases}
                 >
-                  <option value="">Select knowledge base</option>
-                  {kbOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
+                  <option value="">None</option>
+                  {knowledgeBases.map((kb) => (
+                    <option key={kb.id} value={kb.id}>{kb.name}</option>
                   ))}
                 </select>
               </div>

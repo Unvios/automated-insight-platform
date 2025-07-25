@@ -22,6 +22,10 @@ import AddCustomer from "./pages/AddCustomer";
 import CustomerDetails from "./pages/CustomerDetails";
 import EditCustomer from "./pages/EditCustomer";
 import AgentPerformanceReview from "./pages/AgentPerformanceReview";
+import KnowledgeBase from "./pages/KnowledgeBase";
+import CreateKnowledgeBase from "./pages/CreateKnowledgeBase";
+import KnowledgeBaseDetails from "./pages/KnowledgeBaseDetails";
+import EditKnowledgeBase from "./pages/EditKnowledgeBase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +57,10 @@ const App = () => (
           <Route path="/customers/:customerId" element={<CustomerDetails />} />
           <Route path="/customers/:customerId/edit" element={<EditCustomer />} />
           <Route path="/agent-performance-review" element={<AgentPerformanceReview />} />
+          <Route path="/knowledge-base" element={<KnowledgeBase />} />
+          <Route path="/knowledge-base/create" element={<CreateKnowledgeBase />} />
+          <Route path="/knowledge-base/:id" element={<KnowledgeBaseDetails />} />
+          <Route path="/knowledge-base/:id/edit" element={<EditKnowledgeBase />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

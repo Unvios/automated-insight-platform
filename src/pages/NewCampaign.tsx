@@ -11,12 +11,14 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useAgents } from '@/hooks/useAgents';
+import { useAllKnowledgeBases } from '@/hooks/useAllKnowledgeBases';
 
 const NewCampaign = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createCampaign } = useCampaigns();
   const { agents, loading: loadingAgents } = useAgents();
+  const { knowledgeBases, loading: loadingKnowledgeBases } = useAllKnowledgeBases();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +27,7 @@ const NewCampaign = () => {
     
     try {
       const formData = new FormData(e.target as HTMLFormElement);
+      const knowledgeBaseId = formData.get('knowledge') as string;
       const campaignData = {
         name: formData.get('name') as string,
         description: formData.get('description') as string,
@@ -32,7 +35,7 @@ const NewCampaign = () => {
         durationMs: Number(formData.get('duration')) * 24 * 60 * 60 * 1000, // конвертируем дни в миллисекунды
         targetAudience: formData.get('target') as string,
         agentId: formData.get('agent') as string,
-        knowledgeBaseId: formData.get('knowledge') as string,
+        ...(knowledgeBaseId && { knowledgeBaseId }),
       };
 
       await createCampaign(campaignData);
@@ -50,9 +53,7 @@ const NewCampaign = () => {
     'Добавлены вручную',
   ];
 
-  const kbOptions = [
-    'Mock Knowledge Base',
-  ];
+
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -123,11 +124,11 @@ const NewCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="knowledge">Knowledge Base Usage</Label>
-                <select id="knowledge" name="knowledge" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                  <option value="">Select knowledge base</option>
-                  {kbOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
+                <Label htmlFor="knowledge">Knowledge Base Usage (Optional)</Label>
+                <select id="knowledge" name="knowledge" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled={loadingKnowledgeBases}>
+                  <option value="">None</option>
+                  {knowledgeBases.map((kb) => (
+                    <option key={kb.id} value={kb.id}>{kb.name}</option>
                   ))}
                 </select>
               </div>

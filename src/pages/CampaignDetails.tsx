@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Pause, Settings, Users, MessageSquare, TrendingUp, DollarSign, Phone } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Settings, Users, MessageSquare, TrendingUp, DollarSign, Phone, Trash2 } from 'lucide-react';
 import { campaignsApi, Campaign } from '@/services/campaigns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +15,7 @@ const CampaignDetails = () => {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deletingCampaign, setDeletingCampaign] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -60,6 +61,33 @@ const CampaignDetails = () => {
       });
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handleDeleteCampaign = async () => {
+    if (!campaign) return;
+    
+    if (!window.confirm('Вы уверены, что хотите удалить эту кампанию? Это действие нельзя отменить.')) {
+      return;
+    }
+    
+    try {
+      setDeletingCampaign(true);
+      await campaignsApi.delete(campaign.id);
+      toast({
+        title: "Success",
+        description: "Campaign deleted successfully",
+      });
+      navigate('/campaigns');
+    } catch (error) {
+      console.error('Failed to delete campaign:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete campaign",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCampaign(false);
     }
   };
 
@@ -142,6 +170,19 @@ const CampaignDetails = () => {
                   <Play className="h-4 w-4 mr-2" />
                 )}
                 {updatingStatus ? 'Updating...' : campaign.status === 'active' ? 'Pause' : 'Start'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleDeleteCampaign}
+                disabled={deletingCampaign}
+                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+              >
+                {deletingCampaign ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600 mr-2" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-2" />
+                )}
+                {deletingCampaign ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </div>

@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Play, Pause, BarChart3 } from 'lucide-react';
+import { Plus, Play, Pause, BarChart3, Trash2 } from 'lucide-react';
 import { useCampaigns } from '@/hooks/useCampaigns';
 
 const Campaigns = () => {
   const navigate = useNavigate();
-  const { campaigns, loading, total, updateCampaign } = useCampaigns();
+  const { campaigns, loading, total, updateCampaign, deleteCampaign } = useCampaigns();
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -148,6 +149,29 @@ const Campaigns = () => {
                             navigate(`/campaigns/${campaign.id}/edit`);
                           }}>
                             Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={async (e) => { 
+                              e.stopPropagation(); 
+                              if (window.confirm('Вы уверены, что хотите удалить эту кампанию?')) {
+                                setDeletingCampaign(campaign.id);
+                                try {
+                                  await deleteCampaign(campaign.id);
+                                } finally {
+                                  setDeletingCampaign(null);
+                                }
+                              }
+                            }}
+                            disabled={deletingCampaign === campaign.id}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            {deletingCampaign === campaign.id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </td>
