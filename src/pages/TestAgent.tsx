@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Send, Settings, Bot, MessageSquare, Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
@@ -103,19 +104,63 @@ const TestAgent = () => {
   ];
 
   const models = [
-    { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet' },
-    { id: 'openai/gpt-4o-mini', name: 'GPT-4 Mini' },
-    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: DeepSeek Chat v3' }
+    { id: 'openai/gpt-4.1-mini', name: 'openai/gpt-4.1-mini', isFree: false },
+    { id: 'openai/gpt-4o-mini', name: 'openai/gpt-4o-mini', isFree: false },
+    { id: 'openai/gpt-4o-mini-2024-07-18', name: 'openai/gpt-4o-mini-2024-07-18', isFree: false },
+    { id: 'openai/o4-mini', name: 'openai/o4-mini', isFree: false },
+    { id: 'openai/o3-mini', name: 'openai/o3-mini', isFree: false },
+    { id: 'anthropic/claude-3.5-sonnet', name: 'anthropic/claude-3.5-sonnet', isFree: false },
+    { id: 'anthropic/claude-sonnet-4', name: 'anthropic/claude-sonnet-4', isFree: false },
+    { id: 'anthropic/claude-opus-4', name: 'anthropic/claude-opus-4', isFree: false },
+    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: deepseek/deepseek-chat-v3-0324:free', isFree: true },
+    { id: 'deepseek/deepseek-chat-v3-0324', name: 'deepseek/deepseek-chat-v3-0324', isFree: false },
+    { id: 'deepseek/deepseek-r1-0528', name: 'deepseek/deepseek-r1-0528', isFree: false },
+    { id: 'google/gemini-2.5-pro-exp-03-25', name: 'FREE: google/gemini-2.5-pro-exp-03-25', isFree: true },
+    { id: 'google/gemini-2.0-flash-exp:free', name: 'FREE: google/gemini-2.0-flash-exp:free', isFree: true },
+    { id: 'google/gemini-2.5-flash-lite-preview-06-17', name: 'google/gemini-2.5-flash-lite-preview-06-17', isFree: false },
+    { id: 'google/gemini-flash-1.5', name: 'google/gemini-flash-1.5', isFree: false },
+    { id: 'google/gemini-2.0-flash-lite-001', name: 'google/gemini-2.0-flash-lite-001', isFree: false },
+    { id: 'google/gemini-2.5-flash-lite', name: 'google/gemini-2.5-flash-lite', isFree: false },
+    { id: 'x-ai/grok-3-mini-beta', name: 'x-ai/grok-3-mini-beta', isFree: false },
+    { id: 'x-ai/grok-3-mini', name: 'x-ai/grok-3-mini', isFree: false },
+    { id: 'mistralai/ministral-8b', name: 'mistralai/ministral-8b', isFree: false },
+    { id: 'microsoft/phi-3.5-mini-128k-instruct', name: 'microsoft/phi-3.5-mini-128k-instruct', isFree: false },
+    { id: 'minimax/minimax-m1', name: 'minimax/minimax-m1', isFree: false },
+    { id: 'qwen/qwen3-coder:free', name: 'FREE: qwen/qwen3-coder:free', isFree: true },
+    { id: 'qwen/qwen3-4b:free', name: 'FREE: qwen/qwen3-4b:free', isFree: true },
+    { id: 'qwen/qwen3-235b-a22b:free', name: 'FREE: qwen/qwen3-235b-a22b:free', isFree: true },
+    { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'FREE: mistralai/mistral-small-3.1-24b-instruct:free', isFree: true },
+    { id: 'mistralai/mistral-small-3.2-24b-instruct:free', name: 'FREE: mistralai/mistral-small-3.2-24b-instruct:free', isFree: true },
+    { id: 'mistralai/mistral-7b-instruct:free', name: 'FREE: mistralai/mistral-7b-instruct:free', isFree: true },
+    { id: 'mistralai/devstral-small-2505:free', name: 'FREE: mistralai/devstral-small-2505:free', isFree: true },
+    { id: 'moonshotai/kimi-k2:free', name: 'FREE: moonshotai/kimi-k2:free', isFree: true },
+    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'FREE: meta-llama/llama-3.3-70b-instruct:free', isFree: true },
   ];
 
   // Состояние для настроек
   const [settings, setSettings] = useState({
     name: '',
-    model: 'gpt-4',
+    model: 'openai/gpt-4.1-mini',
     systemPrompt: '',
     role: '',
     voice: 'Bys_24000',
   });
+
+  // Состояние фильтра для бесплатных моделей
+  const [showOnlyFree, setShowOnlyFree] = useState(false);
+
+  // Функция фильтрации моделей
+  const filteredModels = showOnlyFree ? models.filter(model => model.isFree) : models;
+
+  // Эффект для автоматической смены модели при фильтрации
+  useEffect(() => {
+    if (showOnlyFree && !filteredModels.some(model => model.id === settings.model)) {
+      // Если текущая модель не входит в отфильтрованный список, выбираем первую доступную
+      if (filteredModels.length > 0) {
+        setSettings(prev => ({...prev, model: filteredModels[0].id}));
+      }
+    }
+  }, [showOnlyFree, settings.model]);
 
   useEffect(() => {
     const loadAgent = async () => {
@@ -129,7 +174,7 @@ const TestAgent = () => {
         // Загружаем настройки агента
         setSettings({
           name: agentData.name || '',
-          model: agentData.model || 'gpt-4',
+          model: agentData.model || 'openai/gpt-4.1-mini',
           systemPrompt: agentData.systemPrompt || '',
           role: agentData.role || '',
           voice: agentData.voice || 'Bys_24000',
@@ -359,12 +404,22 @@ const TestAgent = () => {
 
                 <div>
                   <Label htmlFor="model">AI Model</Label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox 
+                      id="freeOnly" 
+                      checked={showOnlyFree}
+                      onCheckedChange={(checked) => setShowOnlyFree(!!checked)}
+                    />
+                    <Label htmlFor="freeOnly" className="text-sm font-normal cursor-pointer">
+                      Показать только бесплатные модели
+                    </Label>
+                  </div>
                   <Select value={settings.model} onValueChange={(value) => setSettings({...settings, model: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select AI model" />
                     </SelectTrigger>
                     <SelectContent>
-                      {models.map((model) => (
+                      {filteredModels.map((model) => (
                         <SelectItem key={model.id} value={model.id}>
                           {model.name}
                         </SelectItem>
