@@ -25,7 +25,7 @@ const getApiConfig = (): ApiConfig => {
     // Локальная разработка
     return {
       apiBaseUrl: envApiUrl || 'http://localhost:3000',
-      livekitUrl: envLivekitUrl || 'ws://localhost:7002'
+      livekitUrl: envLivekitUrl || 'http://localhost:7002'
     };
   }
   

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
+import { ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff, Brain, Volume2 as Volume2Icon, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
 import { getApiUrl } from '@/config/api';
@@ -46,6 +46,7 @@ const CreateAgent = () => {
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(true); // По умолчанию включен
   // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
   
   // Используем хук для тестирования агента
@@ -57,6 +58,49 @@ const CreateAgent = () => {
     connectToAgent, 
     disconnectFromAgent 
   } = useAgentTester();
+
+  // Компонент для отображения статистики сообщения
+  const MessageStatistics = ({ performanceStats, toolCalls }: { 
+    performanceStats?: { sttDurationMs?: number; llmDurationMs?: number; ttsDurationMs?: number }; 
+    toolCalls?: string[] 
+  }) => {
+    if (!performanceStats && (!toolCalls || toolCalls.length === 0)) return null;
+
+    return (
+      <div className="mt-2 p-2 bg-emerald-200 rounded-md text-xs">
+        <div className="grid grid-cols-2 gap-2">
+          {performanceStats?.sttDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Mic className="h-3 w-3 text-blue-600" />
+              <span className="text-slate-600">STT:</span>
+              <span className="text-slate-600">{performanceStats.sttDurationMs}ms</span>
+            </div>
+          )}
+          {performanceStats?.llmDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Brain className="h-3 w-3 text-green-600" />
+              <span className="text-slate-600">LLM:</span>
+              <span className="text-slate-600">{performanceStats.llmDurationMs}ms</span>
+            </div>
+          )}
+          {performanceStats?.ttsDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Volume2Icon className="h-3 w-3 text-purple-600" />
+              <span className="text-slate-600">TTS:</span>
+              <span className="text-slate-600">{performanceStats.ttsDurationMs}ms</span>
+            </div>
+          )}
+          {toolCalls && toolCalls.length > 0 && (
+            <div className="flex items-center space-x-1 col-span-2">
+              <Wrench className="h-3 w-3 text-orange-600" />
+              <span className="text-slate-600">Tools:</span>
+              <span className="text-slate-600">{toolCalls.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const voices = [
     { id: 'Nec_24000', name: 'Nec 24000' },
@@ -107,18 +151,43 @@ const CreateAgent = () => {
   ];
 
   // Системный промпт по умолчанию из app.js
-  const defaultSystemPrompt = `Говори только по делу, не многословно. Но проговаривай промежуточные результаты, в том числе результаты работы tools. Чтобы не было больших пауз в разговоре.
+  const defaultSystemPrompt = `Говори только по делу, не многословно.
+Ппроговаривай промежуточные результаты, в том числе результаты работы tools. Чтобы не было больших пауз в разговоре.
 
-Твоя задача найти клиента, в битриксе при обращении к тебе (getBitrixContact).
-    Если клиент не найден, то ты должен добавить его и заявку для него в битрикс (addContactWithDeal).
-        Перед тем как создать клиента в битриксе, клиент должен подтвердить, что ты правильно записал его имя, фамилию и телефон. Обязательно уточни это у клиента, после того как получил от него имя, фамилию и номер телефона.
-Если клиент найден, то ты должен найти заявку клиента, оставленную в битриксе (getBitrixDeal).
-    Если заявка не найдена, то ты должен добавить заявку для клиента в битрикс (addDeal).
+В тексте даны примечания когда и какой Tool использовать.
+Примечания записанны в таком формате - [[findCustomer]]. Это значит что в текущей ситуации можно воспользоваться findCustomer Tool.
 
-Затем, ты должен задать кандидату необходимые вопросы для подбора вакансии (getCandidateProfileQuestions).
-После того как ответы на вопросы получены, то должен подобрать подходящие вакансии (getCandidateVacancies).
-После того как вакансии подобраны, ты должен предложить кандидату выбрать одну из них.
-Если кандидат выбрал вакансию, то ты должен подтвердить его заявку на вакансию (applyCandidateVacancy).`;
+Твоя цель - идентифицировать клиента и подобрать ему вакансию.
+
+1. Начало диалога.
+Доступная информация о клиенте на момент начала диалога может быть различной. Ты можешь не знать ничего, можешь знать только номер телефона или можешь знать все что нужно о клиенте - номер телефона, имя и фамилию. Идентификация клиента происходит по номеру телефона. Обязательной дополнительной информацией о клиенте являются имя и фамилия.
+
+Вся доступная информация на начало диалога приведена в разделе "Доступная информация о клиенте". Если этого раздела нет, значит нет никакой начальной доступной информации.
+
+2. Проверка имеющейся информации о клиенте и запрос у клиента недостающей
+    2.1. Если мы не знаем о клиенте ничего, то сначала спрашиваем номер телефона, проговариваем его клиенту, просим подтвердить что мы верно записали номер телефона. После того как клиент подтвердил что номер верный, ищем по нему клиента [[findCustomer]].
+        2.1.1. Если клиента по номеру не нашли, то просим клиента оставить заявку, после чего мы с ним свяжемся. Завершаем диалог.
+        2.1.2. Если клиента по номеру нашли то смотрим известны ли нам имя и фамилия клиента.
+            2.1.2.1. Если не известны, то спрашиваем их у клиента, проговариваем их клиенту, просим подтвердить что мы верно записали имя и фамилию. После того как клиент подтвердил правильность информации идем дальше.
+            2.1.2.2. Если известны, то проговариваем их клиенту, просим подтвердить что мы верно записали имя и фамилию. После того как клиент подтвердил правильность информации идем дальше.
+    2.2. Если мы знаем только номер телефона клиента, то по нему ищем клиента [[findCustomer]].
+        2.2.1. Если клиента по номеру не нашли, то просим клиента оставить заявку, после чего мы с ним свяжемся. Завершаем диалог.
+        2.2.2. Если клиента по номеру нашли то смотрим известны ли нам имя и фамилия клиента.
+            2.2.2.1. Если не известны, то спрашиваем их у клиента, проговариваем их клиенту, просим подтвердить что мы верно записали имя и фамилию. После того как клиент подтвердил правильность информации идем дальше.
+            2.2.2.2. Если известны, то проговариваем их клиенту, просим подтвердить что мы верно записали имя и фамилию. После того как клиент подтвердил правильность информации идем дальше.
+    2.3. Если мы знаем номер телефона клиента и имеем неполную информацию о нем (нет имени или фамилии), то спрашиваем у клиента недостающую информацию, проговариваем её клиенту, просим подтвердить что мы верно её записали. После того как клиент подтвердил правильность информации идем дальше.
+    2.4. Если мы знаем все что нужно о клиенте, то сразу переходим к следующему этапу.
+
+3. Задаем клиенту необходимые вопросы для подбора подходящих ему вакансий [[getCustomerQuestions]].
+
+4. Предлагаем клиенту подходящие вакансии в зависимости от его ответов на вопросы [[getCustomerVacancies]].
+
+5. Просим клиента выбрать одну из вакансий
+    5.1 если клиент выбрал вакансию, то благодарим, прощаемся и завершаем диалог
+    5.2 если клиент не выбрал вакансию, то благодарим, прощаемся и завершаем диалог
+
+
+Если тебе нужно спросить у клиента его номер телефона, то не нужно говорить ему дословно в каком формате номер нужен, просто попроси сказать номер мобильного телефона. Если клиент назвал не корректный номер, то уточни что номер не корректный, нужен именно номер мобильного телефона. Не говори клиенту дословно формат номера и не говори примеры. Если клиент сказал корректный номер, но вместо +7 сказал 8, то поправь номер самостоятельно, не нужно просить об этом клиента. И не нужно сообщать ему что ты это сделаешь.`;
 
   const [agentConfig, setAgentConfig] = useState({
     name: 'Оптимус Прайм',
@@ -126,7 +195,7 @@ const CreateAgent = () => {
     model: 'openai/gpt-4.1-mini',
     voice: 'Bys_24000',
     systemPrompt: defaultSystemPrompt,
-    maxTokens: 500
+    maxTokens: 1000
   });
 
   // Состояние фильтра для бесплатных моделей
@@ -371,8 +440,22 @@ const CreateAgent = () => {
             {/* Test Agent */}
             <div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Test Agent</h3>
-                <p className="text-slate-600 mb-4">Test your agent configuration before creating it</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Test Agent</h3>
+                    <p className="text-slate-600">Test your agent configuration before creating it</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="show-statistics-test"
+                      checked={showStatistics}
+                      onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
+                    />
+                    <label htmlFor="show-statistics-test" className="text-sm text-slate-600 cursor-pointer">
+                      Show statistics
+                    </label>
+                  </div>
+                </div>
                 
                 <div className="space-y-4 mb-4">
                   {/*<div>
@@ -427,6 +510,7 @@ const CreateAgent = () => {
                               : 'bg-white border border-slate-200 text-slate-900'
                           }`}>
                             {message.text}
+                            {showStatistics && <MessageStatistics performanceStats={message.performanceStats} toolCalls={message.toolCalls} />}
                           </div>
                         </div>
                       ))}

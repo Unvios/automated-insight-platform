@@ -13,21 +13,43 @@ interface AgentConfig {
   systemPrompt: string;
 }
 
+interface Message {
+  id?: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+  name?: string;
+  timestamp: number;
+  tool_call_id?: string;
+  tool_calls?: Array<{
+    id: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+  performanceStats?: {
+    sttDurationMs?: number;
+    llmDurationMs?: number;
+    ttsDurationMs?: number;
+  };
+}
+
 interface UseAgentTesterReturn {
   isConnected: boolean;
   isRecording: boolean;
   connectionStatus: string;
-  messages: Array<{ text: string; sender: 'user' | 'bot' }>;
+  messages: Array<{ text: string; sender: 'user' | 'bot'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>;
   connectToAgent: (config: AgentConfig) => Promise<Room>;
   disconnectFromAgent: () => Promise<void>;
-  addMessage: (text: string, sender: 'user' | 'bot') => void;
+  addMessage: (text: string, sender: 'user' | 'bot', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => void;
 }
 
 export const useAgentTester = (): UseAgentTesterReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('Отключено');
-  const [messages, setMessages] = useState<Array<{ text: string; sender: 'user' | 'bot' }>>([]);
+  const [messages, setMessages] = useState<Array<{ text: string; sender: 'user' | 'bot'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>>([]);
   
   const roomRef = useRef<Room | null>(null);
   const micTrackRef = useRef<MediaStreamTrack | null>(null);
@@ -39,8 +61,8 @@ export const useAgentTester = (): UseAgentTesterReturn => {
   }, []);
 
   // Добавляем сообщение в чат
-  const addMessage = useCallback((text: string, sender: 'user' | 'bot') => {
-    setMessages(prev => [...prev, { text, sender }]);
+  const addMessage = useCallback((text: string, sender: 'user' | 'bot', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => {
+    setMessages(prev => [...prev, { text, sender, performanceStats, toolCalls }]);
   }, []);
 
   // Подключение к агенту
@@ -68,7 +90,6 @@ export const useAgentTester = (): UseAgentTesterReturn => {
           roomName: roomNameRef.current,
           participantName: participantName,
           metadata: JSON.stringify({
-            agentId: config.id,
             agentName: config.name,
             agentRole: config.role,
             agentModel: config.model,
@@ -126,6 +147,18 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       const livekitUrl = getLivekitUrl();
 
       console.log(`Подключаемся к LiveKit: ${livekitUrl}`);
+      console.log({
+        roomName: roomNameRef.current,
+        participantName: participantName,
+        metadata: {
+          // agentId: config.id,
+          agentName: config.name,
+          agentRole: config.role,
+          agentModel: config.model,
+          agentVoice: config.voice,
+          agentSystemPrompt: config.systemPrompt,
+        }
+      })
 
       await room.connect(livekitUrl, token);
       setConnectionStatus(`Подключено к комнате: ${roomNameRef.current}`);
@@ -143,17 +176,20 @@ export const useAgentTester = (): UseAgentTesterReturn => {
 
         if (topic === 'text-message') {
           try {
-            const textData = JSON.parse(new TextDecoder().decode(payload));
+            const textData: Message = JSON.parse(new TextDecoder().decode(payload));
             console.log('Получено текстовое сообщение:', textData);
+
+            // Извлекаем tool_calls имена для отображения
+            const toolCalls = textData.tool_calls?.map(tc => tc.function.name) || [];
 
             // Добавляем сообщение в чат в зависимости от типа
             if (textData.role === 'user') {
-              addMessage(textData.content, 'user');
+              addMessage(textData.content, 'user', textData.performanceStats, toolCalls);
             } else if (textData.role === 'assistant') {
-              addMessage(textData.content, 'bot');
+              addMessage(textData.content, 'bot', textData.performanceStats, toolCalls);
             } else {
               // По умолчанию считаем сообщением от бота
-              addMessage(textData.content, 'bot');
+              addMessage(textData.content, 'bot', textData.performanceStats, toolCalls);
             }
           } catch (error) {
             console.error('Ошибка обработки текстового сообщения:', error);

@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, Settings, Bot, MessageSquare, Mic, MicOff, Phone, PhoneOff, Volume2 } from 'lucide-react';
+import { ArrowLeft, Send, Settings, Bot, MessageSquare, Mic, MicOff, Phone, PhoneOff, Volume2, Brain, Volume2 as Volume2Icon, Wrench } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
 import { getApiUrl } from '@/config/api';
@@ -82,6 +82,7 @@ const TestAgent = () => {
   const [testResponse, setTestResponse] = useState('');
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(true); // По умолчанию включен
 
   // Используем хук для тестирования агента
   const { 
@@ -95,6 +96,49 @@ const TestAgent = () => {
 
   // Ref для прокрутки чата в конец
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Компонент для отображения статистики сообщения
+  const MessageStatistics = ({ performanceStats, toolCalls }: { 
+    performanceStats?: { sttDurationMs?: number; llmDurationMs?: number; ttsDurationMs?: number }; 
+    toolCalls?: string[] 
+  }) => {
+    if (!performanceStats && (!toolCalls || toolCalls.length === 0)) return null;
+
+    return (
+      <div className="mt-2 p-2 bg-emerald-200 rounded-md text-xs">
+        <div className="grid grid-cols-2 gap-2">
+          {performanceStats?.sttDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Mic className="h-3 w-3 text-blue-600" />
+              <span className="text-slate-600">STT:</span>
+              <span className="text-slate-600">{performanceStats.sttDurationMs}ms</span>
+            </div>
+          )}
+          {performanceStats?.llmDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Brain className="h-3 w-3 text-green-600" />
+              <span className="text-slate-600">LLM:</span>
+              <span className="text-slate-600">{performanceStats.llmDurationMs}ms</span>
+            </div>
+          )}
+          {performanceStats?.ttsDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Volume2Icon className="h-3 w-3 text-purple-600" />
+              <span className="text-slate-600">TTS:</span>
+              <span className="text-slate-600">{performanceStats.ttsDurationMs}ms</span>
+            </div>
+          )}
+          {toolCalls && toolCalls.length > 0 && (
+            <div className="flex items-center space-x-1 col-span-2">
+              <Wrench className="h-3 w-3 text-orange-600" />
+              <span className="text-slate-600">Tools:</span>
+              <span className="text-slate-600">{toolCalls.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const voices = [
     { id: 'Nec_24000', name: 'Nec 24000' },
@@ -477,8 +521,22 @@ const TestAgent = () => {
             {/* Test Agent */}
             <div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Test Agent</h3>
-                <p className="text-slate-600 mb-4">Test your agent configuration with voice or text</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">Test Agent</h3>
+                    <p className="text-slate-600">Test your agent configuration with voice or text</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="show-statistics-test"
+                      checked={showStatistics}
+                      onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
+                    />
+                    <label htmlFor="show-statistics-test" className="text-sm text-slate-600 cursor-pointer">
+                      Show statistics
+                    </label>
+                  </div>
+                </div>
                 
                 <div className="space-y-4 mb-4">
                   <Button 
@@ -517,6 +575,7 @@ const TestAgent = () => {
                               : 'bg-gray-100 text-gray-900'
                           }`}>
                             {message.text}
+                            {showStatistics && <MessageStatistics performanceStats={message.performanceStats} toolCalls={message.toolCalls} />}
                           </div>
                         </div>
                       ))}
