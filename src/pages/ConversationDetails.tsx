@@ -5,7 +5,8 @@ import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, CheckCircle, XCircle, AlertCircle, Loader2, Timer, Mic, Brain, Volume2, Wrench } from 'lucide-react';
 import { useConversation } from '@/hooks/useConversations';
 import { Message } from '@/services/conversations';
 
@@ -13,6 +14,7 @@ const ConversationDetails = () => {
   const navigate = useNavigate();
   const { id, type } = useParams();
   const [newMessage, setNewMessage] = useState('');
+  const [showStatistics, setShowStatistics] = useState(false);
 
   const {
     conversation,
@@ -37,6 +39,46 @@ const ConversationDetails = () => {
     // TODO: Implement message sending when API is ready
     console.log('Sending message as user:', newMessage);
     setNewMessage('');
+  };
+
+  // Компонент для отображения статистики сообщения
+  const MessageStatistics = ({ statistics }: { statistics: Message['statistics'] }) => {
+    if (!statistics) return null;
+
+    return (
+      <div className="mt-2 p-2 bg-emerald-200 rounded-md text-xs">
+        <div className="grid grid-cols-2 gap-2">
+          {statistics.sttDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Mic className="h-3 w-3 text-blue-600" />
+              <span className="text-slate-600">STT:</span>
+              <span className="text-slate-600">{statistics.sttDurationMs}ms</span>
+            </div>
+          )}
+          {statistics.llmDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Brain className="h-3 w-3 text-green-600" />
+              <span className="text-slate-600">LLM:</span>
+              <span className="text-slate-600">{statistics.llmDurationMs}ms</span>
+            </div>
+          )}
+          {statistics.ttsDurationMs && (
+            <div className="flex items-center space-x-1">
+              <Volume2 className="h-3 w-3 text-purple-600" />
+              <span className="text-slate-600">TTS:</span>
+              <span className="text-slate-600">{statistics.ttsDurationMs}ms</span>
+            </div>
+          )}
+          {statistics.toolCalls && statistics.toolCalls.length > 0 && (
+            <div className="flex items-center space-x-1 col-span-2">
+              <Wrench className="h-3 w-3 text-orange-600" />
+              <span className="text-slate-600">Tools:</span>
+              <span className="text-slate-600">{statistics.toolCalls.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -224,9 +266,21 @@ const ConversationDetails = () => {
               {/* Messages/Transcript */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
                 <div className="p-6 border-b border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {conversation?.type === 'call' ? 'Call Transcript' : 'Chat Messages'}
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {conversation?.type === 'call' ? 'Call Transcript' : 'Chat Messages'}
+                    </h3>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="show-statistics"
+                        checked={showStatistics}
+                        onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
+                      />
+                      <label htmlFor="show-statistics" className="text-sm text-slate-600 cursor-pointer">
+                        Show statistics
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {loading ? (
@@ -250,6 +304,7 @@ const ConversationDetails = () => {
                             }`}>
                               {new Date(message.time).toLocaleString()}
                             </p>
+                            {showStatistics && <MessageStatistics statistics={message.statistics} />}
                           </div>
                         </div>
                       ))}

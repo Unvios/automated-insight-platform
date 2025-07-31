@@ -28,6 +28,12 @@ export interface Message {
     time: string
     createdAt: string
     updatedAt: string
+    statistics?: {
+        sttDurationMs?: number
+        llmDurationMs?: number
+        ttsDurationMs?: number
+        toolCalls?: string[]
+    } | null
 }
 
 export interface ConversationsResponse {
