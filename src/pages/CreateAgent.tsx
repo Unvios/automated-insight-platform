@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -20,6 +20,8 @@ interface CreateAgentData {
   model: string;
   voice: string;
   systemPrompt: string;
+  ssmlEnabled?: boolean;
+  ssmlInstructions?: string;
 }
 
 // Функция для создания агента через API
@@ -48,6 +50,9 @@ const CreateAgent = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showStatistics, setShowStatistics] = useState(true); // По умолчанию включен
   // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
+  
+  // Ref для прокрутки чата в конец
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Используем хук для тестирования агента
   const { 
@@ -110,6 +115,9 @@ const CreateAgent = () => {
   ];
 
   const models = [
+    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: deepseek/deepseek-chat-v3-0324:free', isFree: true },
+    { id: 'deepseek/deepseek-chat-v3-0324', name: 'deepseek/deepseek-chat-v3-0324', isFree: false },
+    { id: 'deepseek/deepseek-r1-0528', name: 'deepseek/deepseek-r1-0528', isFree: false },
     { id: 'openai/gpt-4.1-mini', name: 'openai/gpt-4.1-mini', isFree: false },
     { id: 'openai/gpt-4o-mini', name: 'openai/gpt-4o-mini', isFree: false },
     { id: 'openai/gpt-4o-mini-2024-07-18', name: 'openai/gpt-4o-mini-2024-07-18', isFree: false },
@@ -118,9 +126,6 @@ const CreateAgent = () => {
     { id: 'anthropic/claude-3.5-sonnet', name: 'anthropic/claude-3.5-sonnet', isFree: false },
     { id: 'anthropic/claude-sonnet-4', name: 'anthropic/claude-sonnet-4', isFree: false },
     { id: 'anthropic/claude-opus-4', name: 'anthropic/claude-opus-4', isFree: false },
-    { id: 'deepseek/deepseek-chat-v3-0324:free', name: 'FREE: deepseek/deepseek-chat-v3-0324:free', isFree: true },
-    { id: 'deepseek/deepseek-chat-v3-0324', name: 'deepseek/deepseek-chat-v3-0324', isFree: false },
-    { id: 'deepseek/deepseek-r1-0528', name: 'deepseek/deepseek-r1-0528', isFree: false },
     { id: 'google/gemini-2.5-pro-exp-03-25', name: 'FREE: google/gemini-2.5-pro-exp-03-25', isFree: true },
     { id: 'google/gemini-2.0-flash-exp:free', name: 'FREE: google/gemini-2.0-flash-exp:free', isFree: true },
     { id: 'google/gemini-2.5-flash-lite-preview-06-17', name: 'google/gemini-2.5-flash-lite-preview-06-17', isFree: false },
@@ -192,10 +197,56 @@ const CreateAgent = () => {
   const [agentConfig, setAgentConfig] = useState({
     name: 'Оптимус Прайм',
     role: 'Ты HR-менеджер, который проводит собеседования. Мужчина.',
-    model: 'openai/gpt-4.1-mini',
+    model: 'deepseek/deepseek-chat-v3-0324:free',
     voice: 'Bys_24000',
     systemPrompt: defaultSystemPrompt,
-    maxTokens: 1000
+    maxTokens: 1000,
+    ssmlEnabled: false,
+    ssmlInstructions: `
+Все твои ответы будут проходить через TTS. Для управления интонацией используй SSML
+(Speech Synthesis Markup Language) — язык разметки синтеза речи (базируется на
+спецификации W3C).
+
+Обязательно! Оборачивай каждое отдельное предложение в свои собственные теги <speak>!
+Например: не правильно - <speak>Здравствуйте! Я HR-менеджер. Подскажите,
+пожалуйста,ваш номер мобильного телефона.</speak>. Правильно - <speak>Здравствуйте!</
+speak> <speak>Я HR-менеджер.</speak> <speak>Подскажите, пожалуйста,ваш
+номер мобильного телефона.</speak>
+
+Обязательно используй управление интонацией и тоном с помощью SSML! Всегда используй
+все доступные тебе теги которые описанны тут. Всегда расставляй теги пауз в
+предложениях!
+
+Далее будут инструкции по работе с SSML:
+1. Используй управление громкостю, скоростю и тоном!
+Тег используется для указания характеристик, с которыми нужно прочитать текст.
+Атрибуты тега:
+- pitch - Управление тоном голоса (пример: <speak><paint pitch="value">текст</paint></
+speak>). Возможные значения value: x-low, low, medium, high, x-high
+- slope - Управление интонацией: нисходящая, ровная, восходящая (пример: <speak><paint
+slope="value">текст</paint></speak>). Возможные значения value: x-low, low, medium,
+high, x-high
+- speed - Управление скоростью (пример: <speak><paint speed="value">текст</paint></
+speak>). Возможные значения value: x-low, low, medium, high, x-high
+- loudness - Управление громкостью (пример: <speak><paint loudness="value">текст</
+paint></speak>). Возможные значения value: x-low, low, medium, high, x-high
+
+Поддерживаются вложенные и множественные теги, например: <speak><paint pitch="x-high"
+speed="high">высоко и быстро,<paint loudness="x-high">а еще и громко</paint></paint></
+speak>
+
+Тегом можно выделять отдельные слова, фрагмент текста или весь текст целиком. Вы
+можете использовать тег paint для расстановки акцентов в вопросах. Например, в вопросе
+«Любишь песиков?» сервис по умолчанию сделает акцент на «любишь». Чтобы изменить это,
+используйте стандартный паттерн: <paint pitch="x-high" slope="x-high"
+loudness="high">. Например: <speak>любишь <paint pitch="x-high" slope="x-high"
+loudness="high">песиков?</paint></speak>
+
+2. Паузы в тексте
+Тег используется для расстановки пауз в тексте. <break time="200ms" /> Пример:
+<speak>Привет!<break time="200ms" /> Как прошел день?<break strength="weak" /> Все
+хорошо?</speak>
+    `
   });
 
   // Состояние фильтра для бесплатных моделей
@@ -214,6 +265,13 @@ const CreateAgent = () => {
     }
   }, [showOnlyFree, agentConfig.model]);
 
+  // Автоматическая прокрутка чата в конец при новых сообщениях
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
@@ -226,6 +284,8 @@ const CreateAgent = () => {
         model: agentConfig.model,
         voice: agentConfig.voice,
         systemPrompt: agentConfig.systemPrompt,
+        ssmlEnabled: agentConfig.ssmlEnabled,
+        ssmlInstructions: agentConfig.ssmlInstructions,
       };
 
       await createAgent(agentData);
@@ -414,6 +474,31 @@ const CreateAgent = () => {
                   />
                 </div>
 
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox 
+                      id="ssmlEnabled" 
+                      checked={agentConfig.ssmlEnabled}
+                      onCheckedChange={(checked) => setAgentConfig({...agentConfig, ssmlEnabled: !!checked})}
+                    />
+                    <Label htmlFor="ssmlEnabled" className="text-sm font-normal cursor-pointer">
+                      Использовать SSML
+                    </Label>
+                  </div>
+                  {agentConfig.ssmlEnabled && (
+                    <div>
+                      <Label htmlFor="ssmlInstructions">SSML Instructions</Label>
+                      <Textarea 
+                        id="ssmlInstructions" 
+                        value={agentConfig.ssmlInstructions}
+                        onChange={(e) => setAgentConfig({...agentConfig, ssmlInstructions: e.target.value})}
+                        placeholder="Provide SSML instructions for speech synthesis"
+                        className="min-h-[300px]"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* <div>
                   <Label htmlFor="max-tokens">Max Response Length</Label>
                   <Input 
@@ -499,15 +584,15 @@ const CreateAgent = () => {
                   )}
                 </div>
 
-                <div className="border border-slate-200 rounded-lg p-4 h-64 mb-4 overflow-y-auto bg-slate-50">
+                <div ref={chatContainerRef} className="border border-slate-200 rounded-lg p-4 h-64 mb-4 overflow-y-auto bg-slate-50">
                   {messages.length > 0 ? (
                     <div className="space-y-4">
                       {messages.map((message, index) => (
                         <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`p-3 rounded-lg max-w-xs ${
-                            message.sender === 'user'
+                            (message.sender === 'user')
                               ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-slate-200 text-slate-900'
+                              : (message.sender === 'error' ? 'bg-red-400 text-slate-700' : 'bg-slate-200 text-gray-900')
                           }`}>
                             {message.text}
                             {showStatistics && <MessageStatistics performanceStats={message.performanceStats} toolCalls={message.toolCalls} />}
@@ -532,13 +617,13 @@ const CreateAgent = () => {
                     <div className="flex items-center justify-center h-full text-slate-500">
                       {isConnected 
                         ? 'Подключено к агенту. Говорите в микрофон для общения.' 
-                        : 'Нажмите "Тестировать агента" для начала голосового общения или отправьте текстовое сообщение'
+                        : 'Нажмите "Тестировать агента" для начала голосового общения'
                       }
                     </div>
                   )}
                 </div>
 
-                <div className="flex space-x-2">
+                {/* <div className="flex space-x-2">
                   <Input
                     disabled={true}
                     placeholder="Type a test message..."
@@ -549,7 +634,7 @@ const CreateAgent = () => {
                   <Button onClick={handleTestAgent} disabled={!testMessage.trim()}>
                     <Send className="h-4 w-4" />
                   </Button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

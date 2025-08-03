@@ -37,6 +37,8 @@ interface UpdateAgentData {
   model: string;
   voice: string;
   systemPrompt: string;
+  ssmlEnabled?: boolean;
+  ssmlInstructions?: string;
 }
 
 // API функция для обновления агента
@@ -73,6 +75,8 @@ const TestAgent = () => {
     model?: string;
     systemPrompt?: string;
     voice?: string;
+    ssmlEnabled?: boolean;
+    ssmlInstructions?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -188,6 +192,8 @@ const TestAgent = () => {
     systemPrompt: '',
     role: '',
     voice: 'Bys_24000',
+    ssmlEnabled: false,
+    ssmlInstructions: 'Используй SSML'
   });
 
   // Состояние фильтра для бесплатных моделей
@@ -222,6 +228,8 @@ const TestAgent = () => {
           systemPrompt: agentData.systemPrompt || '',
           role: agentData.role || '',
           voice: agentData.voice || 'Bys_24000',
+          ssmlEnabled: agentData.ssmlEnabled ?? true,
+          ssmlInstructions: agentData.ssmlInstructions
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load agent');
@@ -295,6 +303,8 @@ const TestAgent = () => {
           model: settings.model,
           voice: settings.voice,
           systemPrompt: settings.systemPrompt,
+          ssmlEnabled: settings.ssmlEnabled,
+          ssmlInstructions: settings.ssmlInstructions,
         });
 
         toast({
@@ -339,6 +349,8 @@ const TestAgent = () => {
         model: settings.model,
         voice: settings.voice,
         systemPrompt: settings.systemPrompt,
+        ssmlEnabled: settings.ssmlEnabled,
+        ssmlInstructions: settings.ssmlInstructions,
       };
 
       await updateAgent(id, agentData);
@@ -506,6 +518,31 @@ const TestAgent = () => {
                   />
                 </div>
 
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Checkbox 
+                      id="ssmlEnabled" 
+                      checked={settings.ssmlEnabled}
+                      onCheckedChange={(checked) => setSettings({...settings, ssmlEnabled: !!checked})}
+                    />
+                    <Label htmlFor="ssmlEnabled" className="text-sm font-normal cursor-pointer">
+                      Использовать SSML
+                    </Label>
+                  </div>
+                  {settings.ssmlEnabled && (
+                    <div>
+                      <Label htmlFor="ssmlInstructions">SSML Instructions</Label>
+                      <Textarea 
+                        id="ssmlInstructions" 
+                        value={settings.ssmlInstructions}
+                        onChange={(e) => setSettings({...settings, ssmlInstructions: e.target.value})}
+                        placeholder="Provide SSML instructions for speech synthesis"
+                        className="min-h-[100px]"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={() => navigate(`/agents/${id}`)}>
                     Cancel
@@ -570,9 +607,9 @@ const TestAgent = () => {
                       {messages.map((message, index) => (
                         <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`p-3 rounded-lg max-w-xs ${
-                            message.sender === 'user'
+                            (message.sender === 'user')
                               ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              : (message.sender === 'error' ? 'bg-red-400 text-slate-700' : 'bg-slate-200 text-gray-900')
                           }`}>
                             {message.text}
                             {showStatistics && <MessageStatistics performanceStats={message.performanceStats} toolCalls={message.toolCalls} />}
@@ -603,7 +640,7 @@ const TestAgent = () => {
                   )}
                 </div>
 
-                <div className="flex space-x-2">
+                {/* <div className="flex space-x-2">
                   <Input
                     placeholder="Type a test message..."
                     value={testMessage}
@@ -614,7 +651,7 @@ const TestAgent = () => {
                   <Button onClick={handleSendMessage} disabled={!testMessage.trim() || isConnected}>
                     <Send className="h-4 w-4" />
                   </Button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

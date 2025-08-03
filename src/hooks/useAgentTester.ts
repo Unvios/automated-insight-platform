@@ -11,11 +11,13 @@ interface AgentConfig {
   model: string;
   voice: string;
   systemPrompt: string;
+  ssmlEnabled?: boolean;
+  ssmlInstructions?: string;
 }
 
 interface Message {
   id?: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'error';
   content: string;
   name?: string;
   timestamp: number;
@@ -39,17 +41,17 @@ interface UseAgentTesterReturn {
   isConnected: boolean;
   isRecording: boolean;
   connectionStatus: string;
-  messages: Array<{ text: string; sender: 'user' | 'bot'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>;
+  messages: Array<{ text: string; sender: 'user' | 'assistant' | 'error'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>;
   connectToAgent: (config: AgentConfig) => Promise<Room>;
   disconnectFromAgent: () => Promise<void>;
-  addMessage: (text: string, sender: 'user' | 'bot', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => void;
+  addMessage: (text: string, sender: 'user' | 'assistant' | 'error', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => void;
 }
 
 export const useAgentTester = (): UseAgentTesterReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('Отключено');
-  const [messages, setMessages] = useState<Array<{ text: string; sender: 'user' | 'bot'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>>([]);
+  const [messages, setMessages] = useState<Array<{ text: string; sender: 'user' | 'assistant' | 'error'; performanceStats?: Message['performanceStats']; toolCalls?: string[] }>>([]);
   
   const roomRef = useRef<Room | null>(null);
   const micTrackRef = useRef<MediaStreamTrack | null>(null);
@@ -61,7 +63,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
   }, []);
 
   // Добавляем сообщение в чат
-  const addMessage = useCallback((text: string, sender: 'user' | 'bot', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => {
+  const addMessage = useCallback((text: string, sender: 'user' | 'assistant' | 'error', performanceStats?: Message['performanceStats'], toolCalls?: string[]) => {
     setMessages(prev => [...prev, { text, sender, performanceStats, toolCalls }]);
   }, []);
 
@@ -95,6 +97,9 @@ export const useAgentTester = (): UseAgentTesterReturn => {
             agentModel: config.model,
             agentVoice: config.voice,
             agentSystemPrompt: config.systemPrompt,
+            ...(config.ssmlEnabled && config.ssmlInstructions && {
+              agentSsml: config.ssmlInstructions
+            }),
           }),
         }),
       });
@@ -112,13 +117,13 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       // Слушаем события подключения участников
       room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
         console.log(`Участник подключился: ${participant.identity}`);
-        addMessage(`Участник ${participant.identity} присоединился`, 'bot');
+        addMessage(`Участник ${participant.identity} присоединился`, 'assistant');
       });
 
       // Слушаем события отключения участников
       room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
         console.log(`Участник вышел: ${participant.identity}`);
-        addMessage(`Участник ${participant.identity} покинул разговор`, 'bot');
+        addMessage(`Участник ${participant.identity} покинул разговор`, 'assistant');
       });
 
       // Обрабатываем аудио треки от агента (как в строках 75-87 app.js)
@@ -165,7 +170,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
 
       setIsConnected(true);
 
-      addMessage('Вы подключены к агенту. Микрофон автоматически включен для голосового общения!', 'bot');
+      addMessage('Вы подключены к агенту. Микрофон автоматически включен для голосового общения!', 'assistant');
 
       // Автоматически включаем микрофон после подключения
       await startRecording(room);
@@ -186,21 +191,23 @@ export const useAgentTester = (): UseAgentTesterReturn => {
             if (textData.role === 'user') {
               addMessage(textData.content, 'user', textData.performanceStats, toolCalls);
             } else if (textData.role === 'assistant') {
-              addMessage(textData.content, 'bot', textData.performanceStats, toolCalls);
+              addMessage(textData.content, 'assistant', textData.performanceStats, toolCalls);
+            } else if (textData.role === 'error') {
+              addMessage(textData.content, 'error');
             } else {
               // По умолчанию считаем сообщением от бота
-              addMessage(textData.content, 'bot', textData.performanceStats, toolCalls);
+              addMessage(textData.content, 'assistant', textData.performanceStats, toolCalls);
             }
           } catch (error) {
             console.error('Ошибка обработки текстового сообщения:', error);
-            addMessage('Ошибка обработки сообщения', 'bot');
+            addMessage('Ошибка обработки сообщения', 'assistant');
           }
         } else if (topic === 'chat') {
           // Обработка обычных чат сообщений
           try {
             const message = new TextDecoder().decode(payload);
             console.log('Получено чат сообщение:', message);
-            addMessage(message, 'bot');
+            addMessage(message, 'assistant');
           } catch (error) {
             console.error('Ошибка обработки чат сообщения:', error);
           }
@@ -215,7 +222,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
     } catch (error) {
       console.error('Ошибка подключения:', error);
       setConnectionStatus('Ошибка подключения');
-      addMessage('Ошибка подключения: ' + (error as Error).message, 'bot');
+      addMessage('Ошибка подключения: ' + (error as Error).message, 'assistant');
       throw error;
     }
   }, [generateRoomName, addMessage]);
@@ -242,11 +249,11 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       });
 
       setIsRecording(true);
-      addMessage('Микрофон включён. Говорите!', 'bot');
+      addMessage('Микрофон включён. Говорите!', 'assistant');
 
     } catch (error) {
       console.error('Ошибка работы с микрофоном:', error);
-      addMessage('Ошибка работы с микрофоном: ' + (error as Error).message, 'bot');
+      addMessage('Ошибка работы с микрофоном: ' + (error as Error).message, 'assistant');
     }
   }, [addMessage]);
 
@@ -266,7 +273,7 @@ export const useAgentTester = (): UseAgentTesterReturn => {
       setIsConnected(false);
       setIsRecording(false);
       setConnectionStatus('Отключено');
-      addMessage('Вы отключены от агента.', 'bot');
+      addMessage('Вы отключены от агента.', 'assistant');
 
       // Удаляем все аудио элементы
       const audioElements = document.querySelectorAll('audio[data-livekit-track]');
