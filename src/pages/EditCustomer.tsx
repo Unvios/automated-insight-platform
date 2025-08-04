@@ -10,6 +10,7 @@ import { ArrowLeft, Save, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Customer } from '@/services/customers';
+import { validatePhoneNumber, PHONE_VALIDATION_ERROR_MESSAGE } from '@/utils/phoneValidation';
 
 const EditCustomer = () => {
   const { customerId } = useParams<{ customerId: string }>();
@@ -78,6 +79,8 @@ const EditCustomer = () => {
     return changedFields;
   };
 
+
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -93,6 +96,15 @@ const EditCustomer = () => {
       toast({
         title: "Validation Error",
         description: "Phone number, segment and status are required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePhoneNumber(formData.phoneNumber)) {
+      toast({
+        title: "Validation Error",
+        description: PHONE_VALIDATION_ERROR_MESSAGE,
         variant: "destructive",
       });
       return;

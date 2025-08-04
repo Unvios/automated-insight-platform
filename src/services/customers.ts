@@ -176,7 +176,8 @@ export const customersApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to import CSV: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to import CSV: ${errorText}`);
     }
 
     return response.json();

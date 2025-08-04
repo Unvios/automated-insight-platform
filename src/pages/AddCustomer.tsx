@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers } from '@/hooks/useCustomers';
+import { validatePhoneNumber, PHONE_VALIDATION_ERROR_MESSAGE } from '@/utils/phoneValidation';
 
 const AddCustomer = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ const AddCustomer = () => {
     }));
   };
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -41,6 +44,15 @@ const AddCustomer = () => {
       toast({
         title: "Validation Error",
         description: "Phone number and segment are required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePhoneNumber(formData.phoneNumber)) {
+      toast({
+        title: "Validation Error",
+        description: PHONE_VALIDATION_ERROR_MESSAGE,
         variant: "destructive",
       });
       return;

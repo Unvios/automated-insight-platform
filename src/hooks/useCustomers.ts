@@ -182,7 +182,7 @@ export const useCustomers = () => {
       console.error('Failed to import CSV:', error);
       toast({
         title: "Import Failed",
-        description: "Failed to import CSV file",
+        description: error instanceof Error ? error.message : "Failed to import CSV file",
         variant: "destructive",
       });
       throw error;

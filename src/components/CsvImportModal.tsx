@@ -37,23 +37,6 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
     }
   };
 
-  const downloadExampleCsv = () => {
-    const csvContent = `firstName,lastName,phoneNumber,segment,notes,status
-Иван,Петров,+79991234567,CSV,Клиент из импорта,new
-Мария,Сидорова,+79992345678,CSV,Потенциальный клиент,new
-Алексей,Козлов,+79993456789,CSV,Существующий клиент,conversation`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'customers_example.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -87,9 +70,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
                   <ul className="mt-1 space-y-1 text-slate-600">
                     <li>• firstName</li>
                     <li>• lastName</li>
-                    <li>• segment</li>
                     <li>• notes</li>
-                    <li>• status</li>
                   </ul>
                 </div>
               </div>
@@ -98,24 +79,12 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
 
           {/* Пример CSV */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-slate-900">Example CSV</h3>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={downloadExampleCsv}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Download Example
-              </Button>
-            </div>
             <div className="bg-slate-900 text-slate-100 rounded-lg p-4 font-mono text-sm overflow-x-auto">
               <pre className="whitespace-pre-wrap">
-{`firstName,lastName,phoneNumber,segment,notes,status
-Иван,Петров,+7 (999) 123-45-67,CSV,Клиент из импорта,new
-Мария,Сидорова,+7 (999) 234-56-78,CSV,Потенциальный клиент,new
-Алексей,Козлов,+7 (999) 345-67-89,CSV,Существующий клиент,conversation`}
+{`firstName,lastName,phoneNumber,notes
+Иван,Петров,+71234567890,Клиент из импорта
+Мария,Сидорова,+71234567890,Потенциальный клиент
+Алексей,Козлов,+71234567890,Существующий клиент`}
               </pre>
             </div>
           </div>
