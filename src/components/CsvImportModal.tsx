@@ -39,9 +39,9 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
 
   const downloadExampleCsv = () => {
     const csvContent = `firstName,lastName,phoneNumber,segment,notes,status
-Иван,Петров,+7 (999) 123-45-67,CSV,Клиент из импорта,new
-Мария,Сидорова,+7 (999) 234-56-78,CSV,Потенциальный клиент,new
-Алексей,Козлов,+7 (999) 345-67-89,CSV,Существующий клиент,conversation`;
+Иван,Петров,+79991234567,CSV,Клиент из импорта,new
+Мария,Сидорова,+79992345678,CSV,Потенциальный клиент,new
+Алексей,Козлов,+79993456789,CSV,Существующий клиент,conversation`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
