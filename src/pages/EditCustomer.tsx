@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -25,32 +25,57 @@ const EditCustomer = () => {
     phoneNumber: '',
     segment: '',
     notes: '',
-    status: 'new',
+    status: '',
+  });
+
+  const [originalData, setOriginalData] = useState({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    segment: '',
+    notes: '',
+    status: '',
   });
 
   useEffect(() => {
-    if (customerId) {
-      loadCustomer();
-    }
+    if (!customerId) return;
+
+    const loadCustomer = async () => {
+      try {
+        setLoading(true);
+        const customer = await getCustomer(customerId);
+        const customerData = {
+          firstName: customer.firstName || '',
+          lastName: customer.lastName || '',
+          phoneNumber: customer.phoneNumber,
+          segment: customer.segment,
+          notes: customer.notes || '',
+          status: customer.status,
+        };
+        setFormData(customerData);
+        setOriginalData(customerData);
+      } catch (error) {
+        navigate('/customers');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCustomer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId]);
 
-  const loadCustomer = async () => {
-    try {
-      setLoading(true);
-      const customer = await getCustomer(customerId!);
-      setFormData({
-        firstName: customer.firstName || '',
-        lastName: customer.lastName || '',
-        phoneNumber: customer.phoneNumber,
-        segment: customer.segment,
-        notes: customer.notes || '',
-        status: customer.status,
-      });
-    } catch (error) {
-      navigate('/customers');
-    } finally {
-      setLoading(false);
-    }
+  const getChangedFields = () => {
+    const changedFields: Partial<typeof formData> = {};
+    
+    Object.keys(formData).forEach((key) => {
+      const fieldKey = key as keyof typeof formData;
+      if (formData[fieldKey] !== originalData[fieldKey]) {
+        changedFields[fieldKey] = formData[fieldKey] || undefined;
+      }
+    });
+    
+    return changedFields;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -73,16 +98,17 @@ const EditCustomer = () => {
       return;
     }
 
+    const changedFields = getChangedFields();
+    
+    // Если ничего не изменилось, просто переходим на страницу кастомера
+    if (Object.keys(changedFields).length === 0) {
+      navigate(`/customers/${customerId}`);
+      return;
+    }
+
     try {
       setSaving(true);
-      await updateCustomer(customerId!, {
-        firstName: formData.firstName || undefined,
-        lastName: formData.lastName || undefined,
-        phoneNumber: formData.phoneNumber,
-        segment: formData.segment,
-        notes: formData.notes || undefined,
-        status: formData.status,
-      });
+      await updateCustomer(customerId!, changedFields);
       
       navigate(`/customers/${customerId}`);
     } catch (error) {

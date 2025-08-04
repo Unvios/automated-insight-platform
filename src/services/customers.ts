@@ -104,6 +104,11 @@ export const customersApi = {
     status?: string;
     lastContactAt?: string;
   }): Promise<Customer> {
+    // Фильтруем undefined значения, чтобы не отправлять их на сервер
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined)
+    );
+
     const response = await fetch(getApiUrl('customers/update-one'), {
       method: 'POST',
       headers: {
@@ -111,7 +116,7 @@ export const customersApi = {
       },
       body: JSON.stringify({
         customerId,
-        ...data,
+        ...filteredData,
       }),
     });
 
