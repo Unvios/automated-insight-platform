@@ -129,15 +129,16 @@ const Agents = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
-    if (diffInHours < 1) {
+    if (diffInMinutes < 1) {
       return 'только что';
-    } else if (diffInHours < 24) {
-      return `${diffInHours} ч назад`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays} дн назад`;
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} мин назад`;
+    } else if (diffInMinutes < 1440) {
+        return `${Math.floor(diffInMinutes / 60)} ч назад`;
+    } {
+      return `${Math.floor(diffInMinutes / 60 / 24)} дн назад`;
     }
   };
 
