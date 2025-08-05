@@ -22,6 +22,15 @@ interface CreateAgentData {
   systemPrompt: string;
   ssmlEnabled?: boolean;
   ssmlInstructions?: string;
+  vadConfigEnabled?: boolean;
+  vadConfig?: {
+    vadMinSpeechDuration?: number;
+    vadMinSilenceDuration?: number;
+    vadPrefixPaddingDuration?: number;
+    vadMaxBufferedSpeech?: number;
+    vadActivationThreshold?: number;
+    vadForceCPU?: boolean;
+  };
 }
 
 // Функция для создания агента через API
@@ -249,6 +258,18 @@ loudness="high">песиков?</paint></speak>
     `
   });
 
+  // VAD конфигурация как строки для формы
+  const [vadConfig, setVadConfig] = useState({
+    vadMinSpeechDuration: '200',
+    vadMinSilenceDuration: '500',
+    vadPrefixPaddingDuration: '50',
+    vadMaxBufferedSpeech: '30000',
+    vadActivationThreshold: '0.2',
+    vadForceCPU: true,
+  });
+  
+  const [vadConfigEnabled, setVadConfigEnabled] = useState(false);
+
   // Состояние фильтра для бесплатных моделей
   const [showOnlyFree, setShowOnlyFree] = useState(false);
 
@@ -286,7 +307,41 @@ loudness="high">песиков?</paint></speak>
         systemPrompt: agentConfig.systemPrompt,
         ssmlEnabled: agentConfig.ssmlEnabled,
         ssmlInstructions: agentConfig.ssmlInstructions,
+        vadConfigEnabled: vadConfigEnabled,
       };
+
+      // Добавляем VAD конфигурацию только если включен vadConfigEnabled и есть заполненные поля
+      if (vadConfigEnabled) {
+        const hasVadConfig = vadConfig.vadMinSpeechDuration !== undefined || 
+                             vadConfig.vadMinSilenceDuration !== undefined || 
+                             vadConfig.vadPrefixPaddingDuration !== undefined || 
+                             vadConfig.vadMaxBufferedSpeech !== undefined || 
+                             vadConfig.vadActivationThreshold !== undefined || 
+                             vadConfig.vadForceCPU !== undefined;
+        
+        if (hasVadConfig) {
+          agentData.vadConfig = {};
+          
+          if (vadConfig.vadMinSpeechDuration) {
+            agentData.vadConfig.vadMinSpeechDuration = Number(vadConfig.vadMinSpeechDuration);
+          }
+          if (vadConfig.vadMinSilenceDuration) {
+            agentData.vadConfig.vadMinSilenceDuration = Number(vadConfig.vadMinSilenceDuration);
+          }
+          if (vadConfig.vadPrefixPaddingDuration) {
+            agentData.vadConfig.vadPrefixPaddingDuration = Number(vadConfig.vadPrefixPaddingDuration);
+          }
+          if (vadConfig.vadMaxBufferedSpeech) {
+            agentData.vadConfig.vadMaxBufferedSpeech = Number(vadConfig.vadMaxBufferedSpeech);
+          }
+          if (vadConfig.vadActivationThreshold) {
+            agentData.vadConfig.vadActivationThreshold = Number(vadConfig.vadActivationThreshold);
+          }
+          if (vadConfig.vadForceCPU !== undefined) {
+            agentData.vadConfig.vadForceCPU = vadConfig.vadForceCPU;
+          }
+        }
+      }
 
       await createAgent(agentData);
 
@@ -351,7 +406,20 @@ loudness="high">песиков?</paint></speak>
       }
     } else {
       try {
-        await connectToAgent(agentConfig);
+        // Подготавливаем конфигурацию агента с VAD полями
+        const testConfig = {
+          ...agentConfig,
+          ...(vadConfigEnabled && {
+            vadMinSpeechDuration: vadConfig.vadMinSpeechDuration ? parseInt(vadConfig.vadMinSpeechDuration) : undefined,
+            vadMinSilenceDuration: vadConfig.vadMinSilenceDuration ? parseInt(vadConfig.vadMinSilenceDuration) : undefined,
+            vadPrefixPaddingDuration: vadConfig.vadPrefixPaddingDuration ? parseInt(vadConfig.vadPrefixPaddingDuration) : undefined,
+            vadMaxBufferedSpeech: vadConfig.vadMaxBufferedSpeech ? parseInt(vadConfig.vadMaxBufferedSpeech) : undefined,
+            vadActivationThreshold: vadConfig.vadActivationThreshold ? parseFloat(vadConfig.vadActivationThreshold) : undefined,
+            vadForceCPU: vadConfig.vadForceCPU,
+          }),
+        };
+
+        await connectToAgent(testConfig);
 
         toast({
           title: "Подключение к агенту",
@@ -495,6 +563,109 @@ loudness="high">песиков?</paint></speak>
                         placeholder="Provide SSML instructions for speech synthesis"
                         className="min-h-[300px]"
                       />
+                    </div>
+                  )}
+                </div>
+
+                {/* VAD Configuration */}
+                <div>
+                  <div className="flex items-center space-x-2 mb-3">
+                    <Checkbox 
+                      id="vadConfigEnabled" 
+                      checked={vadConfigEnabled}
+                      onCheckedChange={(checked) => setVadConfigEnabled(!!checked)}
+                    />
+                    <Label htmlFor="vadConfigEnabled" className="text-sm font-normal cursor-pointer">
+                      Использовать VAD Configuration
+                    </Label>
+                  </div>
+                  
+                  {vadConfigEnabled && (
+                    <div>
+                      <h3 className="text-lg font-medium text-slate-900 mb-3">VAD Configuration</h3>
+                      <p className="text-sm text-slate-600 mb-4">Настройки определения активности голоса (Voice Activity Detection)</p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="vadMinSpeechDuration">Min Speech Duration (ms)</Label>
+                          <Input 
+                            id="vadMinSpeechDuration" 
+                            type="number"
+                            value={vadConfig.vadMinSpeechDuration}
+                            onChange={(e) => setVadConfig({...vadConfig, vadMinSpeechDuration: e.target.value})}
+                            placeholder="200"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Минимальная длительность речи для того чтобы считать это началом нового сегмента, мс</p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="vadMinSilenceDuration">Min Silence Duration (ms)</Label>
+                          <Input 
+                            id="vadMinSilenceDuration" 
+                            type="number"
+                            value={vadConfig.vadMinSilenceDuration}
+                            onChange={(e) => setVadConfig({...vadConfig, vadMinSilenceDuration: e.target.value})}
+                            placeholder="500"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Время тишины, после которого сегмент речи будет считаться завершенным, мс</p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="vadPrefixPaddingDuration">Prefix Padding Duration (ms)</Label>
+                          <Input 
+                            id="vadPrefixPaddingDuration" 
+                            type="number"
+                            value={vadConfig.vadPrefixPaddingDuration}
+                            onChange={(e) => setVadConfig({...vadConfig, vadPrefixPaddingDuration: e.target.value})}
+                            placeholder="50"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Длительность паузы, добавляемого в начало каждого сегмента речи, мс</p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="vadMaxBufferedSpeech">Max Buffered Speech (ms)</Label>
+                          <Input 
+                            id="vadMaxBufferedSpeech" 
+                            type="number"
+                            value={vadConfig.vadMaxBufferedSpeech}
+                            onChange={(e) => setVadConfig({...vadConfig, vadMaxBufferedSpeech: e.target.value})}
+                            placeholder="30000"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Максимальная длительность речи которая будет храниться в буффере, мс</p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="vadActivationThreshold">Activation Threshold</Label>
+                          <Input 
+                            id="vadActivationThreshold" 
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="1"
+                            value={vadConfig.vadActivationThreshold}
+                            onChange={(e) => setVadConfig({...vadConfig, vadActivationThreshold: e.target.value})}
+                            placeholder="0.2"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">Порог обнаружения голоса, 0.0 - 1.0</p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <div className="grid grid-cols-1">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id="vadForceCPU" 
+                                checked={vadConfig.vadForceCPU ?? false}
+                                onCheckedChange={(checked) => setVadConfig({...vadConfig, vadForceCPU: !!checked})}
+                              />
+                              <Label htmlFor="vadForceCPU" className="text-sm font-normal cursor-pointer">
+                                Force CPU Usage
+                              </Label>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Принудительное использование CPU для обработки</p>
+                          </div>
+                          
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

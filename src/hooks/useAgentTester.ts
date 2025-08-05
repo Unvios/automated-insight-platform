@@ -13,6 +13,12 @@ interface AgentConfig {
   systemPrompt: string;
   ssmlEnabled?: boolean;
   ssmlInstructions?: string;
+  vadMinSpeechDuration?: number;
+  vadMinSilenceDuration?: number;
+  vadPrefixPaddingDuration?: number;
+  vadMaxBufferedSpeech?: number;
+  vadActivationThreshold?: number;
+  vadForceCPU?: boolean;
 }
 
 interface Message {
@@ -99,6 +105,24 @@ export const useAgentTester = (): UseAgentTesterReturn => {
             agentSystemPrompt: config.systemPrompt,
             ...(config.ssmlEnabled && config.ssmlInstructions && {
               agentSsml: config.ssmlInstructions
+            }),
+            ...(config.vadMinSpeechDuration !== undefined && {
+              vadMinSpeechDuration: config.vadMinSpeechDuration
+            }),
+            ...(config.vadMinSilenceDuration !== undefined && {
+              vadMinSilenceDuration: config.vadMinSilenceDuration
+            }),
+            ...(config.vadPrefixPaddingDuration !== undefined && {
+              vadPrefixPaddingDuration: config.vadPrefixPaddingDuration
+            }),
+            ...(config.vadMaxBufferedSpeech !== undefined && {
+              vadMaxBufferedSpeech: config.vadMaxBufferedSpeech
+            }),
+            ...(config.vadActivationThreshold !== undefined && {
+              vadActivationThreshold: config.vadActivationThreshold
+            }),
+            ...(config.vadForceCPU !== undefined && {
+              vadForceCPU: config.vadForceCPU
             }),
           }),
         }),

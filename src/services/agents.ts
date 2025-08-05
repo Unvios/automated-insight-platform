@@ -11,6 +11,17 @@ export interface Agent {
     status: string
     createdAt: string
     updatedAt: string
+    ssmlEnabled?: boolean
+    ssmlInstructions?: string
+    vadConfigEnabled?: boolean
+    vadConfig?: {
+        vadMinSpeechDuration?: number
+        vadMinSilenceDuration?: number
+        vadPrefixPaddingDuration?: number
+        vadMaxBufferedSpeech?: number
+        vadActivationThreshold?: number
+        vadForceCPU?: boolean
+    }
 }
 
 export interface AgentsResponse {
