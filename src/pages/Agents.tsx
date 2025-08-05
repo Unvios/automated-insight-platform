@@ -13,7 +13,6 @@ interface Agent {
   id: string;
   version: string;
   name: string;
-  status: string;
   role: string;
   specialization: string;
   model: string;
@@ -35,7 +34,6 @@ interface AgentsResponse {
 interface GetAgentsParams {
   page?: number;
   limit?: number;
-  status?: string;
   role?: string;
 }
 
@@ -57,22 +55,6 @@ const fetchAgents = async (params: GetAgentsParams = {}): Promise<AgentsResponse
   return response.json();
 };
 
-// Функция для обновления статуса агента
-const updateAgentStatus = async (agentId: string, status: string): Promise<void> => {
-  const response = await fetch(getApiUrl('agents/update-status-one'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ agentId, status }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-  }
-};
-
 const Agents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -81,7 +63,6 @@ const Agents = () => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
-    active: 0,
     conversations: 0,
     avgSuccessRate: 0
   });
@@ -100,10 +81,8 @@ const Agents = () => {
       setAgents(response.data);
       
       // Вычисляем статистику
-      const activeAgents = response.data.filter(agent => getAgentStatus(agent) === 'active').length;
       setStats({
         total: response.total,
-        active: activeAgents,
         conversations: response.data.length * 10, // Моковые данные для демонстрации
         avgSuccessRate: 91 // Моковые данные для демонстрации
       });
@@ -142,66 +121,6 @@ const Agents = () => {
     }
   };
 
-  // Функция для получения статуса агента
-  const getAgentStatus = (agent: Agent) => {
-    return agent?.status || 'idle';
-  };
-
-  // Функция для получения цвета статуса
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'idle':
-        return 'bg-gray-100 text-gray-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Функция для переключения статуса агента
-  const handleToggleStatus = async (agent: Agent, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const currentStatus = getAgentStatus(agent);
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    
-    try {
-      await updateAgentStatus(agent.id, newStatus);
-      
-      // Обновляем статус в локальном состоянии
-      setAgents(prevAgents => 
-        prevAgents.map(a => 
-          a.id === agent.id 
-            ? { ...a, status: newStatus }
-            : a
-        )
-      );
-      
-      // Обновляем статистику
-      setStats(prevStats => ({
-        ...prevStats,
-        active: newStatus === 'active' 
-          ? prevStats.active + 1 
-          : prevStats.active - 1
-      }));
-      
-      toast({
-        title: "Статус обновлен",
-        description: `Агент ${agent.name} теперь ${newStatus === 'active' ? 'активен' : 'неактивен'}`,
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Не удалось обновить статус агента';
-      toast({
-        title: "Ошибка обновления",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
@@ -237,15 +156,6 @@ const Agents = () => {
                   <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                 </div>
                 <Bot className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600">Active Now</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.active}</p>
-                </div>
-                <Activity className="h-8 w-8 text-green-500" />
               </div>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
@@ -317,9 +227,6 @@ const Agents = () => {
                           <p className="text-xs text-blue-600 font-medium">v{agent.version}</p>
                         </div>
                       </div>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(getAgentStatus(agent))}`}>
-                        {getAgentStatus(agent)}
-                      </span>
                     </div>
 
                     <div className="space-y-3 mb-4">
@@ -353,13 +260,6 @@ const Agents = () => {
                           }}
                         >
                           <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={(e) => handleToggleStatus(agent, e)}
-                        >
-                          {getAgentStatus(agent) === 'active' ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
