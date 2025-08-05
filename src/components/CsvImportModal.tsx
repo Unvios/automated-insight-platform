@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Upload, Download, FileText } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CsvImportModalProps {
   onImport: (file: File) => Promise<void>;
@@ -11,14 +12,77 @@ interface CsvImportModalProps {
 const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const { toast } = useToast();
+
+  const mbInBytes10 = 10 * 1024 * 1024
+  const validateFile = (file: File): string | undefined => {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      return 'Пожалуйста, выберите CSV файл'
+    }
+    if (file.size > mbInBytes10) {
+      return 'Максимальный размер файла 10Мб'
+    }
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.name.toLowerCase().endsWith('.csv')) {
+    const validationResult = validateFile(file)
+
+    if (file && !validationResult) {
       setSelectedFile(file);
     } else if (file) {
-      alert('Please select a CSV file');
+      toast({
+        title: "Ошибка",
+        description: validationResult,
+        variant: "destructive"
+      });
       event.target.value = '';
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Проверяем, действительно ли мы покинули drop zone
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const file = files[0];
+    const validationResult = validateFile(file)
+
+    if (file && !validationResult) {
+      setSelectedFile(file);
+    } else if (file) {
+      toast({
+        title: "Ошибка",
+        description: validationResult,
+        variant: "destructive"
+      });
     }
   };
 
@@ -92,10 +156,29 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
           {/* Загрузка файла */}
           <div>
             <h3 className="text-lg font-medium text-slate-900 mb-3">Upload CSV File</h3>
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-              <FileText className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-600 mb-2">
-                {selectedFile ? `Selected: ${selectedFile.name}` : 'Drop your CSV file here or click to browse'}
+            <div 
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                isDragOver 
+                  ? 'border-blue-400 bg-blue-50' 
+                  : 'border-slate-300 hover:border-slate-400'
+              }`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <FileText className={`h-8 w-8 mx-auto mb-2 ${
+                isDragOver ? 'text-blue-500' : 'text-slate-400'
+              }`} />
+              <p className={`text-sm mb-2 ${
+                isDragOver ? 'text-blue-700' : 'text-slate-600'
+              }`}>
+                {selectedFile 
+                  ? `Selected: ${selectedFile.name}` 
+                  : isDragOver 
+                    ? 'Drop your CSV file here' 
+                    : 'Drop your CSV file here or click to browse'
+                }
               </p>
               <input
                 id="csv-file-input-modal"
@@ -108,6 +191,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
                 variant="outline"
                 onClick={() => document.getElementById('csv-file-input-modal')?.click()}
                 className="mt-2"
+                disabled={isDragOver}
               >
                 <Upload className="h-4 w-4 mr-2" />
                 Choose File
