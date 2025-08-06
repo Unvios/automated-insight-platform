@@ -450,7 +450,7 @@ loudness="high">песиков?</paint></speak>
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Agents
+              Назад к агентам
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Создание AI агента</h1>
