@@ -19,33 +19,33 @@ const Customers = () => {
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
 
   const handleFilterChange = (filterType: 'status' | 'segment', value: string) => {
-    fetchCustomers({ [filterType]: value || undefined, page: 1 });
+    fetchCustomers({ [filterType]: value, page: 1 });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    // При поиске сбрасываем на первую страницу
-    if (value !== searchTerm) {
-      fetchCustomers({ page: 1 });
-    }
-  };
+  // const handleSearchChange = (value: string) => {
+  //   setSearchTerm(value);
+  //   // При поиске сбрасываем на первую страницу
+  //   if (value !== searchTerm) {
+  //     fetchCustomers({ page: 1 });
+  //   }
+  // };
 
   const handleCsvImport = async (file: File) => {
     try {
       setImporting(true);
       await importCsv(file, {
-        segment: 'CSV',
+        segment: 'csv',
         status: 'new',
       });
     } catch (error) {
-      console.error('Import failed:', error);
+      console.error('Ошибка импорта:', error);
     } finally {
       setImporting(false);
     }
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!confirm('Are you sure you want to delete this customer?')) {
+    if (!confirm('Вы уверены, что хотите удалить этого клиента?')) {
       return;
     }
 
@@ -53,7 +53,7 @@ const Customers = () => {
       setDeletingCustomerId(customerId);
       await deleteCustomer(customerId);
     } catch (error) {
-      console.error('Delete failed:', error);
+      console.error('Ошибка удаления:', error);
     } finally {
       setDeletingCustomerId(null);
     }
@@ -84,9 +84,9 @@ const Customers = () => {
 
   const getSegmentColor = (segment: string) => {
     switch (segment) {
-      case 'Bitrix':
+      case 'bitrix':
         return 'bg-purple-100 text-purple-800';
-      case 'CSV':
+      case 'csv':
         return 'bg-orange-100 text-orange-800';
       case 'Добавлены вручную':
         return 'bg-blue-100 text-blue-800';
@@ -125,20 +125,20 @@ const Customers = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                Customer Management
+                Управление клиентами
               </h1>
               <p className="text-slate-600">
-                Manage your customer relationships and data
+                Управление клиентами и их данными
               </p>
             </div>
             <div className="flex space-x-3">
-              <Button 
+              {/* <Button 
                 variant="outline"
                 className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Integrate CRM
-              </Button>
+                Интеграция CRM
+              </Button> */}
               <CsvImportModal 
                 onImport={handleCsvImport}
                 importing={importing}
@@ -148,49 +148,46 @@ const Customers = () => {
                 onClick={() => navigate('/customers/add')}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Customer
+                Добавить клиента
               </Button>
             </div>
           </div>
 
           {/* Customer Stats */}
-          <div className="grid grid-cols-1 gap-6 mb-8">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 h-full">
+              <div className="flex items-center justify-between h-full">
                 <div>
-                  <p className="text-sm text-slate-600">Total Customers</p>
+                  <p className="text-sm text-slate-600">Всего клиентов</p>
                   <p className="text-2xl font-bold text-slate-900">{pagination.total}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-500" />
               </div>
             </div>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 h-full">
+            <div className="flex flex-col sm:flex-row gap-4 h-full items-center">
+              {/* <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
-                  placeholder="Search customers by name or phone..."
+                  placeholder="Поиск клиентов по имени или телефону..."
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
                 />
-              </div>
+              </div> */}
               <div className="flex space-x-2">
-                <Button variant="outline">
+                {/* <Button variant="outline">
                   <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-                                  <select 
+                  Фильтр
+                </Button> */}
+                  <select 
                     className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={filters.segment}
                     onChange={(e) => handleFilterChange('segment', e.target.value)}
                   >
-                    <option value="">All Segments</option>
-                    <option value="Bitrix">Bitrix</option>
-                    <option value="CSV">CSV</option>
+                    <option value="">Все сегменты</option>
+                    <option value="bitrix">bitrix</option>
+                    <option value="csv">csv</option>
                     <option value="Добавлены вручную">Добавлены вручную</option>
                   </select>
                 <select 
@@ -198,45 +195,49 @@ const Customers = () => {
                   value={filters.status}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                 >
-                  <option value="">All Statuses</option>
-                  <option value="new">New</option>
-                  <option value="conversation">Conversation</option>
-                  <option value="success">Success</option>
-                  <option value="failed">Failed</option>
+                  <option value="">Все статусы</option>
+                  <option value="new">new</option>
+                  <option value="conversation">conversation</option>
+                  <option value="success">success</option>
+                  <option value="failed">failed</option>
                 </select>
               </div>
             </div>
           </div>
+          </div>
+
+          {/* Search and Filters */}
+          
 
           {/* Customers Table */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200">
             <div className="p-6 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">All Customers</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Все клиенты</h3>
             </div>
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="p-6 text-center text-slate-500">Loading customers...</div>
+                <div className="p-6 text-center text-slate-500">Загрузка клиентов...</div>
               ) : (
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Customer
+                        Клиент
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Segment
+                        Сегмент
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Status
+                        Статус
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Last Contact
+                        Последнее взаимодействие
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Created
+                        Создан
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Actions
+                        Действия
                       </th>
                     </tr>
                   </thead>
@@ -248,7 +249,7 @@ const Customers = () => {
                             <div className="text-sm font-medium text-slate-900">
                               {customer.firstName && customer.lastName 
                                 ? `${customer.firstName} ${customer.lastName}`
-                                : customer.firstName || customer.lastName || 'Unnamed Customer'
+                                : customer.firstName || customer.lastName || 'Неизвестно'
                               }
                             </div>
                             <div className="text-sm text-slate-500 flex items-center">
@@ -268,7 +269,7 @@ const Customers = () => {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                          {customer.lastContactAt ? formatDate(customer.lastContactAt) : 'Never'}
+                          {customer.lastContactAt ? formatDate(customer.lastContactAt) : 'Неизвестно'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                           {formatDate(customer.createdAt)}
@@ -281,7 +282,6 @@ const Customers = () => {
                               onClick={() => navigate(`/customers/${customer.id}`)}
                             >
                               <Eye className="h-4 w-4 mr-1" />
-                              View
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -289,7 +289,6 @@ const Customers = () => {
                               onClick={() => navigate(`/customers/${customer.id}/edit`)}
                             >
                               <Edit className="h-4 w-4 mr-1" />
-                              Edit
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -299,7 +298,6 @@ const Customers = () => {
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
-                              {deletingCustomerId === customer.id ? 'Deleting...' : 'Delete'}
                             </Button>
                           </div>
                         </td>
@@ -311,7 +309,7 @@ const Customers = () => {
               
               {!loading && filteredCustomers.length === 0 && (
                 <div className="p-6 text-center text-slate-500">
-                  {searchTerm ? 'No customers found matching your search.' : 'No customers found.'}
+                  {searchTerm ? 'Клиенты не найдены.' : 'Клиенты не найдены.'}
                 </div>
               )}
             </div>
@@ -322,12 +320,12 @@ const Customers = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="text-sm text-slate-700">
-                      Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-                      {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                      {pagination.total} customers
+                      Показано {((pagination.page - 1) * pagination.limit) + 1} до{' '}
+                      {Math.min(pagination.page * pagination.limit, pagination.total)} из{' '}
+                      {pagination.total} клиентов
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-slate-700">Show:</span>
+                      <span className="text-sm text-slate-700">Показать:</span>
                       <select
                         value={pagination.limit}
                         onChange={(e) => handleLimitChange(Number(e.target.value))}
@@ -349,7 +347,7 @@ const Customers = () => {
                       disabled={pagination.page <= 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      Предыдущая
                     </Button>
                     
                     <div className="flex items-center space-x-1">
@@ -377,7 +375,7 @@ const Customers = () => {
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
                     >
-                      Next
+                      Следующая
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>

@@ -13,7 +13,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { useAgents } from '@/hooks/useAgents';
 import { useAllKnowledgeBases } from '@/hooks/useAllKnowledgeBases';
 
-const NewCampaign = () => {
+const CampaignCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createCampaign } = useCampaigns();
@@ -48,12 +48,10 @@ const NewCampaign = () => {
   };
 
   const segments = [
-    'Bitrix',
-    'CSV', 
+    'bitrix',
+    'csv', 
     'Добавлены вручную',
   ];
-
-
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -70,41 +68,41 @@ const NewCampaign = () => {
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Campaigns
+              Назад к кампаниям
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Create New Campaign</h1>
-              <p className="text-slate-600">Set up your AI-powered marketing campaign</p>
+              <h1 className="text-2xl font-bold text-slate-900">Создание новой кампании</h1>
+              <p className="text-slate-600">Настройте свою AI маркетинговую кампанию</p>
             </div>
           </div>
 
           <div className="max-w-2xl">
             <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
               <div>
-                <Label htmlFor="name">Campaign Name</Label>
-                <Input id="name" name="name" placeholder="Enter campaign name" required />
+                <Label htmlFor="name">Название кампании</Label>
+                <Input id="name" name="name" placeholder="Введите название кампании" required />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" placeholder="Describe your campaign goals and target audience" />
+                <Label htmlFor="description">Описание</Label>
+                <Textarea id="description" name="description" placeholder="Опишите цели и целевую аудиторию кампании" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="budget">Budget</Label>
+                  <Label htmlFor="budget">Бюджет</Label>
                   <Input id="budget" name="budget" type="number" placeholder="5000" required />
                 </div>
                 <div>
-                  <Label htmlFor="duration">Duration (days)</Label>
+                  <Label htmlFor="duration">Длительность (дней)</Label>
                   <Input id="duration" name="duration" type="number" placeholder="30" required />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="target">Target Audience</Label>
+                <Label htmlFor="target">Целевая аудитория (сегмент)</Label>
                 <select id="target" name="target" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                  <option value="">Select target audience</option>
+                  <option value="">Выберите сегмент</option>
                   {segments.map((segment) => (
                     <option key={segment} value={segment}>{segment}</option>
                   ))}
@@ -112,9 +110,9 @@ const NewCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="agent">Choose Agent</Label>
+                <Label htmlFor="agent">Выберите агента</Label>
                 <select id="agent" name="agent" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required disabled={loadingAgents}>
-                  <option value="">Select agent</option>
+                  <option value="">Выберите агента</option>
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name} ({agent.role})
@@ -124,9 +122,9 @@ const NewCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="knowledge">Knowledge Base Usage (Optional)</Label>
+                <Label htmlFor="knowledge">Использование базы знаний (необязательно)</Label>
                 <select id="knowledge" name="knowledge" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled={loadingKnowledgeBases}>
-                  <option value="">None</option>
+                  <option value="">Не использовать</option>
                   {knowledgeBases.map((kb) => (
                     <option key={kb.id} value={kb.id}>{kb.name}</option>
                   ))}
@@ -135,7 +133,7 @@ const NewCampaign = () => {
 
               <div className="flex justify-end space-x-4">
                 <Button type="button" variant="outline" onClick={() => navigate('/campaigns')}>
-                  Cancel
+                  Отмена
                 </Button>
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
                   {loading ? (
@@ -143,7 +141,7 @@ const NewCampaign = () => {
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  {loading ? 'Creating...' : 'Create Campaign'}
+                  {loading ? 'Создание...' : 'Создать кампанию'}
                 </Button>
               </div>
             </form>
@@ -154,4 +152,4 @@ const NewCampaign = () => {
   );
 };
 
-export default NewCampaign;
+export default CampaignCreate;

@@ -24,8 +24,14 @@ export interface Agent {
     }
 }
 
-export interface AgentsResponse {
-  data: Agent[];
+export interface AgentWithStats extends Agent {
+  totalConversations: number
+  medianDurationMs: number
+  successRate: number
+}
+
+export interface AgentsResponse<T extends Agent = Agent> {
+  data: T[];
   total: number;
   page: number;
   limit: number;
@@ -55,6 +61,26 @@ export const agentsApi = {
     return response.json();
   },
 
+  async findManyWithStats(params: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  } = {}): Promise<AgentsResponse<AgentWithStats>> {
+    const response = await fetch(getApiUrl('agents/find-many-latest-with-stats'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch agents with stats: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
   // Получить агента по ID
   async findOne(agentId: string): Promise<Agent> {
     const response = await fetch(getApiUrl('agents/find-one-latest'), {
@@ -67,6 +93,22 @@ export const agentsApi = {
 
     if (!response.ok) {
       throw new Error(`Failed to fetch agent: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async countAll(): Promise<number> {
+    const response = await fetch(getApiUrl('agents/count-all'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch agents: ${response.statusText}`);
     }
 
     return response.json();

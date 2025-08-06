@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCustomers } from '@/hooks/useCustomers';
 import { validatePhoneNumber, PHONE_VALIDATION_ERROR_MESSAGE } from '@/utils/phoneValidation';
 
-const AddCustomer = () => {
+const CustomerCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { createCustomer } = useCustomers();
@@ -42,8 +42,8 @@ const AddCustomer = () => {
     
     if (!formData.phoneNumber || !formData.segment) {
       toast({
-        title: "Validation Error",
-        description: "Phone number and segment are required fields.",
+        title: "Ошибка валидации",
+        description: "Номер телефона и сегмент являются обязательными полями.",
         variant: "destructive",
       });
       return;
@@ -51,7 +51,7 @@ const AddCustomer = () => {
 
     if (!validatePhoneNumber(formData.phoneNumber)) {
       toast({
-        title: "Validation Error",
+        title: "Ошибка валидации",
         description: PHONE_VALIDATION_ERROR_MESSAGE,
         variant: "destructive",
       });
@@ -92,11 +92,11 @@ const AddCustomer = () => {
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Customers
+              Назад к клиентам
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Add New Customer</h1>
-              <p className="text-slate-600">Create a new customer profile</p>
+              <h1 className="text-2xl font-bold text-slate-900">Добавить нового клиента</h1>
+              <p className="text-slate-600">Создать новый профиль клиента</p>
             </div>
           </div>
 
@@ -104,42 +104,42 @@ const AddCustomer = () => {
             <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">Имя</Label>
                   <Input 
                     id="firstName" 
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    placeholder="Enter first name" 
+                    placeholder="Введите имя" 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">Фамилия</Label>
                   <Input 
                     id="lastName" 
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    placeholder="Enter last name" 
+                    placeholder="Введите фамилию" 
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Label htmlFor="phoneNumber">Номер телефона *</Label>
                 <Input 
                   id="phoneNumber" 
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
-                  placeholder="Enter phone number" 
+                  placeholder="Введите номер телефона" 
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="segment">Customer Segment *</Label>
-                                  <select 
+                <Label htmlFor="segment">Сегмент клиента *</Label>
+                  <select 
                     id="segment" 
                     name="segment"
                     value={formData.segment}
@@ -147,21 +147,21 @@ const AddCustomer = () => {
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
                     required
                   >
-                    <option value="">Select segment</option>
-                    <option value="Bitrix">Bitrix</option>
-                    <option value="CSV">CSV</option>
+                    <option value="">Выберите сегмент</option>
+                    <option value="bitrix">bitrix</option>
+                    <option value="csv">csv</option>
                     <option value="Добавлены вручную">Добавлены вручную</option>
                   </select>
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">Примечания</Label>
                 <Textarea 
                   id="notes" 
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
-                  placeholder="Add any additional notes about the customer" 
+                  placeholder="Добавьте любые дополнительные примечания о клиенте" 
                 />
               </div>
 
@@ -172,7 +172,7 @@ const AddCustomer = () => {
                   onClick={() => navigate('/customers')}
                   disabled={loading}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button 
                   type="submit" 
@@ -180,7 +180,7 @@ const AddCustomer = () => {
                   disabled={loading}
                 >
                   <User className="h-4 w-4 mr-2" />
-                  {loading ? 'Adding...' : 'Add Customer'}
+                  {loading ? 'Добавление...' : 'Добавить клиента'}
                 </Button>
               </div>
             </form>
@@ -191,4 +191,4 @@ const AddCustomer = () => {
   );
 };
 
-export default AddCustomer;
+export default CustomerCreate;

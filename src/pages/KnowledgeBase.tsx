@@ -1,34 +1,76 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, Eye, Edit, Trash2 } from 'lucide-react';
-import { useKnowledgeBases } from '@/hooks/useKnowledgeBases';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Edit, FileText } from 'lucide-react';
+import { knowledgeBaseApi, IKnowledgeBase } from '@/services/knowledgeBase';
 
 const KnowledgeBase = () => {
   const navigate = useNavigate();
-  const { knowledgeBases, loading, error, deleteKnowledgeBase } = useKnowledgeBases();
+  const { id } = useParams<{ id: string }>();
+  const [knowledgeBase, setKnowledgeBase] = useState<IKnowledgeBase | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleView = (id: string) => {
-    navigate(`/knowledge-base/${id}`);
-  };
+  useEffect(() => {
+    const fetchKnowledgeBase = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const data = await knowledgeBaseApi.findOne(id);
+        setKnowledgeBase(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Произошла ошибка при загрузке базы знаний');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEdit = (id: string) => {
+    fetchKnowledgeBase();
+  }, [id]);
+
+  const handleEdit = () => {
     navigate(`/knowledge-base/${id}/edit`);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Вы уверены, что хотите удалить эту базу знаний?')) {
-      try {
-        await deleteKnowledgeBase(id);
-      } catch (err) {
-        console.error('Ошибка при удалении базы знаний:', err);
-      }
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="text-center text-slate-500">
+              Загрузка базы знаний...
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !knowledgeBase) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error || 'База знаний не найдена'}
+              </AlertDescription>
+            </Alert>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -39,99 +81,54 @@ const KnowledgeBase = () => {
         
         <main className="flex-1 p-6">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Базы знаний</h1>
-            <p className="text-slate-600">Управляйте базами знаний для ваших AI агентов</p>
+            <div className="flex items-center mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/knowledge-base')}
+                className="mr-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Назад к списку
+              </Button>
+              <h1 className="text-2xl font-bold text-slate-900">{knowledgeBase.name}</h1>
+            </div>
           </div>
 
-          {error && (
-            <Alert className="mb-6" variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Базы знаний */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8">
-            <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-slate-900">Базы знаний</h3>
-              <Button 
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center">
+                <FileText className="h-6 w-6 text-blue-600 mr-3" />
+                <h2 className="text-lg font-semibold text-slate-900">Информация о базе знаний</h2>
+              </div>
+              <Button
+                onClick={handleEdit}
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate('/knowledge-base/create')}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Создать базу знаний
+                <Edit className="h-4 w-4 mr-2" />
+                Редактировать
               </Button>
             </div>
-            
-            {loading ? (
-              <div className="p-6 text-center text-slate-500">
-                Загрузка баз знаний...
+
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-slate-700 mb-2">Описание</h3>
+                <p className="text-slate-600">
+                  {knowledgeBase.description || 'Описание отсутствует'}
+                </p>
               </div>
-            ) : knowledgeBases.length === 0 ? (
-              <div className="p-6 text-center text-slate-500">
-                Базы знаний не найдены. Создайте первую базу знаний.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Название
-                      </th>
-                                              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/3">
-                          Действия
-                        </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-200">
-                    {knowledgeBases.map((kb) => (
-                      <tr key={kb.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-slate-400 mr-3" />
-                            <span className="text-sm font-medium text-slate-900">{kb.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 pr-6 pl-0 whitespace-nowrap text-sm font-medium text-right">
-                          <div className="flex space-x-2 justify-start">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleView(kb.id)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Посмотреть
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleEdit(kb.id)}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Редактировать
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleDelete(kb.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Удалить
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            </div>
           </div>
+
+          {/* Здесь можно добавить дополнительные секции, например:
+              - Документы в базе знаний
+              - Статистика использования
+              - Настройки доступа
+          */}
         </main>
       </div>
     </div>
   );
 };
 
-export default KnowledgeBase;
+export default KnowledgeBase; 

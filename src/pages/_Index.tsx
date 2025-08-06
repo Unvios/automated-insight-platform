@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import KPICard from '@/components/KPICard';
@@ -16,6 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { conversationsApi } from '@/services/conversations';
+import { agentsApi, AgentWithStats } from '@/services/agents';
+import { customersApi } from '@/services/customers';
 
 interface WidgetItem {
   id: string;
@@ -73,6 +75,48 @@ const Index = () => {
     ));
   };
 
+  const [conversationsCount, setConversationsCount] = useState<number>(0);
+  const [customersCount, setCustomersCount] = useState<number>(0);
+  const [agentsCount, setAgentsCount] = useState<number>(0);
+  const [agentsWithStats, setAgentsWithStats] = useState<AgentWithStats[]>([]);
+
+  useEffect(() => {
+    const fetchConversationsCount = async () => {
+      setConversationsCount(await conversationsApi.countAll());
+    };
+
+    fetchConversationsCount();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchCustomersCount = async () => {
+      setCustomersCount(await customersApi.countAll());
+    };
+
+    fetchCustomersCount();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchAgentsCount = async () => {
+      setAgentsCount(await agentsApi.countAll());
+    };
+
+    fetchAgentsCount();
+  }, []);
+
+  useEffect(() => {
+    const fetchAgentsWithStats = async () => {
+      const response = await agentsApi.findManyWithStats({
+        limit: 3,
+      });
+      setAgentsWithStats(response.data);
+    };
+
+    fetchAgentsWithStats();
+  }, []);
+
   const kpiWidgets = widgets.filter(w => w.type === 'kpi');
   const dashboardWidgets = widgets.filter(w => w.type === 'widget');
 
@@ -87,14 +131,11 @@ const Index = () => {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                Welcome back, John! 👋
+                Добро пожаловать!
               </h1>
-              <p className="text-slate-600">
-                Here's what's happening with your AI automation today.
-              </p>
             </div>
             
-            <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+            {/* <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
@@ -176,32 +217,32 @@ const Index = () => {
                   </Button>
                 </div>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </div>
 
           {/* KPI Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <KPICard
-              title="Active Conversations"
-              value="127"
-              change="+12%"
-              trend="up"
+              title="Кол-во разговоров"
+              value={conversationsCount.toString()}
+              // change="+12%"
+              // trend="up"
               icon={MessageSquare}
               iconColor="bg-blue-500"
             />
             <KPICard
-              title="Monthly Costs"
-              value="$2,847"
-              change="-5%"
-              trend="down"
+              title="Кол-во клиентов"
+              value={customersCount.toString()}
+              // change="-5%"
+              // trend="down"
               icon={DollarSign}
               iconColor="bg-purple-500"
             />
             <KPICard
-              title="Agent Efficiency"
-              value="87.3%"
-              change="+3.2%"
-              trend="up"
+              title="Кол-во агентов"
+              value={agentsCount.toString()}
+              // change="+3.2%"
+              // trend="up"
               icon={Bot}
               iconColor="bg-orange-500"
             />
@@ -211,11 +252,11 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <QuickActions />
-              <LiveActivity />
+              {/* <LiveActivity /> */}
             </div>
             
             <div className="space-y-6">
-              <AgentStatus />
+              <AgentStatus agents={agentsWithStats} />
             </div>
           </div>
         </main>

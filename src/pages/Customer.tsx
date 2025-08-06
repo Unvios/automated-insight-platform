@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Customer } from '@/services/customers';
 
-const CustomerDetails = () => {
+const Customer = () => {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,7 +40,7 @@ const CustomerDetails = () => {
   const handleDelete = async () => {
     if (!customer) return;
     
-    if (!confirm('Are you sure you want to delete this customer?')) {
+    if (!confirm('Вы уверены, что хотите удалить этого клиента?')) {
       return;
     }
 
@@ -49,7 +49,7 @@ const CustomerDetails = () => {
       await deleteCustomer(customer.id);
       navigate('/customers');
     } catch (error) {
-      // Error handling is done in the hook
+      // Обработка ошибок выполняется в хуке
     } finally {
       setDeleting(false);
     }
@@ -88,7 +88,7 @@ const CustomerDetails = () => {
           <Sidebar />
           <main className="flex-1 p-6">
             <div className="flex items-center justify-center h-64">
-              <div className="text-slate-500">Loading...</div>
+              <div className="text-slate-500">Загрузка...</div>
             </div>
           </main>
         </div>
@@ -104,7 +104,7 @@ const CustomerDetails = () => {
           <Sidebar />
           <main className="flex-1 p-6">
             <div className="flex items-center justify-center h-64">
-              <div className="text-slate-500">Customer not found</div>
+              <div className="text-slate-500">Клиент не найден</div>
             </div>
           </main>
         </div>
@@ -128,16 +128,16 @@ const CustomerDetails = () => {
                 className="mr-4"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Customers
+                Назад к клиентам
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-slate-900">
                   {customer.firstName && customer.lastName 
                     ? `${customer.firstName} ${customer.lastName}`
-                    : customer.firstName || customer.lastName || 'Customer'
+                    : customer.firstName || customer.lastName || 'Клиент'
                   }
                 </h1>
-                <p className="text-slate-600">Customer Details</p>
+                <p className="text-slate-600">Детали клиента</p>
               </div>
             </div>
             
@@ -147,7 +147,7 @@ const CustomerDetails = () => {
                 onClick={() => navigate(`/customers/${customer.id}/edit`)}
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                Редактировать
               </Button>
               <Button 
                 variant="destructive" 
@@ -155,7 +155,7 @@ const CustomerDetails = () => {
                 disabled={deleting}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? 'Удаление...' : 'Удалить'}
               </Button>
             </div>
           </div>
@@ -165,16 +165,16 @@ const CustomerDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <User className="h-5 w-5 mr-2" />
-                  Personal Information
+                  Личная информация
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Full Name</label>
+                  <label className="text-sm font-medium text-slate-700">Полное имя</label>
                   <p className="text-slate-900">
                     {customer.firstName && customer.lastName 
                       ? `${customer.firstName} ${customer.lastName}`
-                      : customer.firstName || customer.lastName || 'Not specified'
+                      : customer.firstName || customer.lastName || 'Не указано'
                     }
                   </p>
                 </div>
@@ -182,20 +182,22 @@ const CustomerDetails = () => {
                 <div>
                   <label className="text-sm font-medium text-slate-700 flex items-center">
                     <Phone className="h-4 w-4 mr-1" />
-                    Phone Number
+                    Номер телефона
                   </label>
                   <p className="text-slate-900">{customer.phoneNumber}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Segment</label>
+                  <label className="text-sm font-medium text-slate-700">Сегмент</label>
+                  <br />
                   <Badge variant="secondary" className="mt-1">
                     {customer.segment}
                   </Badge>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Status</label>
+                  <label className="text-sm font-medium text-slate-700">Статус</label>
+                  <br />
                   <Badge className={`mt-1 ${getStatusColor(customer.status)}`}>
                     {customer.status}
                   </Badge>
@@ -207,23 +209,23 @@ const CustomerDetails = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Calendar className="h-5 w-5 mr-2" />
-                  Timeline
+                  История
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Created</label>
+                  <label className="text-sm font-medium text-slate-700">Создан</label>
                   <p className="text-slate-900">{formatDate(customer.createdAt)}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">Last Updated</label>
+                  <label className="text-sm font-medium text-slate-700">Последнее обновление</label>
                   <p className="text-slate-900">{formatDate(customer.updatedAt)}</p>
                 </div>
 
                 {customer.lastContactAt && (
                   <div>
-                    <label className="text-sm font-medium text-slate-700">Last Contact</label>
+                    <label className="text-sm font-medium text-slate-700">Последнее взаимодействие</label>
                     <p className="text-slate-900">{formatDate(customer.lastContactAt)}</p>
                   </div>
                 )}
@@ -235,7 +237,7 @@ const CustomerDetails = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <FileText className="h-5 w-5 mr-2" />
-                    Notes
+                    Примечания
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -250,4 +252,4 @@ const CustomerDetails = () => {
   );
 };
 
-export default CustomerDetails; 
+export default Customer; 

@@ -182,4 +182,20 @@ export const customersApi = {
 
     return response.json();
   },
+
+  async countAll(): Promise<number> {
+    const response = await fetch(getApiUrl('customers/count-all'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch customers: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
 }; 

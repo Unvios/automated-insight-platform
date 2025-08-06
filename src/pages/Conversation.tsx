@@ -10,7 +10,7 @@ import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, Check
 import { useConversation } from '@/hooks/useConversations';
 import { Message } from '@/services/conversations';
 
-const ConversationDetails = () => {
+const Conversation = () => {
   const navigate = useNavigate();
   const { id, type } = useParams();
   const [newMessage, setNewMessage] = useState('');
@@ -22,24 +22,6 @@ const ConversationDetails = () => {
     loading,
     error,
   } = useConversation(id);
-
-  // Моковые данные для демонстрации
-  const nextActions = [
-    { id: 1, action: 'Add lead to CRM', status: 'success', datetime: '17-05-2025 16:43', type: 'success' },
-    { id: 2, action: 'Send follow-up email', status: 'pending', datetime: '17-05-2025 17:00', type: 'pending' },
-    { id: 3, action: 'Update customer segment', status: 'failed', datetime: '17-05-2025 16:45', type: 'error' }
-  ];
-
-  const summary = conversation?.summary || (conversation?.type === 'call' 
-    ? "Customer called regarding a billing issue with a duplicate charge on their invoice. The agent successfully identified the problem, processed a refund, and provided clear timeline expectations. The customer was satisfied with the resolution."
-    : "Customer contacted support via chat about a billing discrepancy. Agent quickly identified and resolved the duplicate charge issue, processing a refund and explaining the timeline. Issue resolved successfully with high customer satisfaction.");
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !conversation) return;
-    // TODO: Implement message sending when API is ready
-    console.log('Sending message as user:', newMessage);
-    setNewMessage('');
-  };
 
   // Компонент для отображения статистики сообщения
   const MessageStatistics = ({ statistics }: { statistics: Message['statistics'] }) => {
@@ -96,11 +78,11 @@ const ConversationDetails = () => {
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Conversations
+              Назад к разговорам
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
-                {conversation?.type === 'call' ? 'Call' : 'Chat'} Details
+                Детали {conversation?.type === 'call' ? 'Звонка' : 'Чата'} 
               </h1>
               <p className="text-slate-600">
                 {conversation?.customer} → {conversation?.agentName}
@@ -111,22 +93,22 @@ const ConversationDetails = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Conversation Info */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Conversation Info</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Информация о разговоре</h3>
               
               <div className="space-y-4">
                                   <div className="flex items-center space-x-3">
                     <User className="h-5 w-5 text-slate-600" />
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{conversation?.customer || 'Unknown'}</p>
-                      <p className="text-xs text-slate-500">Customer</p>
+                      <p className="text-sm font-medium text-slate-900">{conversation?.customer || 'Неизвестно'}</p>
+                      <p className="text-xs text-slate-500">Клиент</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center space-x-3">
                     <Bot className="h-5 w-5 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{conversation?.agentName || 'Unknown'}</p>
-                      <p className="text-xs text-slate-500">AI Agent</p>
+                      <p className="text-sm font-medium text-slate-900">{conversation?.agentName || 'Неизвестный агент'}</p>
+                      <p className="text-xs text-slate-500">AI агент</p>
                     </div>
                   </div>
 
@@ -134,34 +116,34 @@ const ConversationDetails = () => {
                     <Clock className="h-5 w-5 text-slate-600" />
                     <div>
                       <p className="text-sm font-medium text-slate-900">
-                        {conversation?.startTime ? new Date(conversation.startTime).toLocaleString() : 'Unknown'}
+                        {conversation?.startTime ? new Date(conversation.startTime).toLocaleString('ru-RU') : 'Неизвестно'}
                       </p>
                       <p className="text-xs text-slate-500">
-                        Duration: {conversation?.durationMs ? `${Math.round(conversation.durationMs / 1000)}s` : 'Unknown'}
+                        Длительность: {conversation?.durationMs ? `${Math.round(conversation.durationMs / 1000)}s` : 'Неизвестно'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3">
+                  {/* <div className="flex items-center space-x-3">
                     <Star className="h-5 w-5 text-yellow-500" />
                     <div>
                       <p className="text-sm font-medium text-slate-900">
-                        Rating: {conversation?.rating ? `${conversation.rating}/5` : 'No rating'}
+                        Рейтинг: {conversation?.rating ? `${conversation.rating}/5` : 'Неизвестно'}
                       </p>
                       <p className={`text-xs capitalize ${
                         conversation?.sentiment === 'positive' ? 'text-green-600' :
                         conversation?.sentiment === 'negative' ? 'text-red-600' :
                         'text-slate-500'
                       }`}>
-                        {conversation?.sentiment || 'neutral'} sentiment
+                        {conversation?.sentiment || 'neutral'} сентимент
                       </p>
                     </div>
-                  </div>
+                  </div> */}
               </div>
 
               {/* Analysis Result */}
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Result Analysis</h4>
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Результат анализа</h4>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     {conversation?.targetAchieved ? 
@@ -169,17 +151,17 @@ const ConversationDetails = () => {
                       <XCircle className="h-4 w-4 text-red-600" />
                     }
                     <span className={`text-sm font-medium ${conversation?.targetAchieved ? 'text-green-600' : 'text-red-600'}`}>
-                      {conversation?.targetAchieved ? 'Target Achieved' : 'Target Not Achieved'}
+                      {conversation?.targetAchieved ? 'Цель достигнута' : 'Цель не достигнута'}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600">Goal: {conversation?.goal || 'Resolve customer issue'}</p>
+                  {/* <p className="text-xs text-slate-600">Цель: {conversation?.goal || 'Решить проблему клиента'}</p>
                   <p className="text-xs text-slate-600">
-                    Recommendation: {conversation?.recommendation || 'Follow up within 24 hours to ensure customer satisfaction'}
-                  </p>
-                  <Button variant="outline" size="sm" className="w-full mt-2">
+                    Рекомендация: {conversation?.recommendation || 'Следующий шаг в течение 24 часов для обеспечения удовлетворения клиента'}
+                  </p> */}
+                  {/* <Button variant="outline" size="sm" className="w-full mt-2">
                     <Eye className="h-4 w-4 mr-2" />
-                    Full Analysis
-                  </Button>
+                    Полная аналитика
+                  </Button> */}
                 </div>
               </div>
 
@@ -187,7 +169,7 @@ const ConversationDetails = () => {
                 <div className="mt-6 pt-6 border-t border-slate-200">
                   <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
                     <Play className="h-4 w-4 mr-2" />
-                    Listen Call
+                    Слушать звонок
                   </Button>
                   {/* <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
                     <Phone className="h-4 w-4 mr-2" />
@@ -209,12 +191,12 @@ const ConversationDetails = () => {
               {/* Summary */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                  {conversation?.type === 'call' ? 'Call' : 'Chat'} Summary
+                  Сводка
                 </h3>
                 <div 
                   className="text-slate-600 text-sm leading-relaxed whitespace-pre-line"
                   dangerouslySetInnerHTML={{ 
-                    __html: summary?.replace(/\n/g, '<br>') || '' 
+                    __html: conversation?.summary?.replace(/\n/g, '<br>') || '' 
                   }}
                 />
               </div>
@@ -268,7 +250,7 @@ const ConversationDetails = () => {
                 <div className="p-6 border-b border-slate-200">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-slate-900">
-                      {conversation?.type === 'call' ? 'Call Transcript' : 'Chat Messages'}
+                      {conversation?.type === 'call' ? 'Транскрипция звонка' : 'Сообщения'}
                     </h3>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -277,7 +259,7 @@ const ConversationDetails = () => {
                         onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
                       />
                       <label htmlFor="show-statistics" className="text-sm text-slate-600 cursor-pointer">
-                        Show statistics
+                        Показать статистику
                       </label>
                     </div>
                   </div>
@@ -286,7 +268,7 @@ const ConversationDetails = () => {
                 {loading ? (
                   <div className="flex-1 p-6 flex items-center justify-center">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-                    <span className="ml-2 text-slate-600">Loading messages...</span>
+                    <span className="ml-2 text-slate-600">Загрузка сообщений...</span>
                   </div>
                 ) : (
                   <>
@@ -309,27 +291,6 @@ const ConversationDetails = () => {
                         </div>
                       ))}
                     </div>
-
-                    {conversation?.type === 'chat' && conversation.status === 'active' && (
-                      <div className="p-6 border-t border-slate-200">
-                        <div className="flex space-x-2">
-                          <Input 
-                            placeholder="Type your message..." 
-                            className="flex-1"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                          />
-                          <Button 
-                            className="bg-blue-600 hover:bg-blue-700"
-                            onClick={handleSendMessage}
-                            disabled={!newMessage.trim()}
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
@@ -341,4 +302,4 @@ const ConversationDetails = () => {
   );
 };
 
-export default ConversationDetails;
+export default Conversation;

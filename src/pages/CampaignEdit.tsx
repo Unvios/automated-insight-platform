@@ -11,9 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useAgents } from '@/hooks/useAgents';
 import { useAllKnowledgeBases } from '@/hooks/useAllKnowledgeBases';
-import { campaignsApi, Campaign } from '@/services/campaigns';
+import { campaignsApi, ICampaign } from '@/services/campaigns';
 
-const EditCampaign = () => {
+const CampaignEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
@@ -21,7 +21,7 @@ const EditCampaign = () => {
   const { agents, loading: loadingAgents } = useAgents();
   const { knowledgeBases, loading: loadingKnowledgeBases } = useAllKnowledgeBases();
   const [loading, setLoading] = useState(false);
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [campaign, setCampaign] = useState<ICampaign | null>(null);
   const [loadingCampaign, setLoadingCampaign] = useState(true);
   const [selectedKnowledgeBaseId, setSelectedKnowledgeBaseId] = useState<string>('');
   const [selectedTargetAudience, setSelectedTargetAudience] = useState<string>('');
@@ -40,10 +40,10 @@ const EditCampaign = () => {
         setSelectedTargetAudience(campaignData.targetAudience || '');
         setSelectedAgentId(campaignData.agentId || '');
       } catch (error) {
-        console.error('Failed to fetch campaign:', error);
+        console.error('Не удалось загрузить данные кампании:', error);
         toast({
           title: "Error",
-          description: "Failed to load campaign data",
+          description: "Не удалось загрузить данные кампании",
           variant: "destructive",
         });
         navigate('/campaigns');
@@ -80,14 +80,14 @@ const EditCampaign = () => {
       await updateCampaign(id, campaignData);
       toast({
         title: "Success",
-        description: "Campaign updated successfully",
+        description: "Данные кампании успешно обновлены",
       });
       navigate(`/campaigns/${id}`);
     } catch (error) {
-      console.error('Failed to update campaign:', error);
+      console.error('Не удалось обновить данные кампании:', error);
       toast({
         title: "Error",
-        description: "Failed to update campaign",
+        description: "Не удалось обновить данные кампании",
         variant: "destructive",
       });
     } finally {
@@ -96,12 +96,10 @@ const EditCampaign = () => {
   };
 
   const segments = [
-    'Bitrix',
-    'CSV', 
+    'bitrix',
+    'csv', 
     'Добавлены вручную',
   ];
-
-
 
   if (loadingCampaign) {
     return (
@@ -127,7 +125,7 @@ const EditCampaign = () => {
           <Sidebar />
           <main className="flex-1 p-6">
             <div className="flex items-center justify-center h-64">
-              <p className="text-slate-500">Campaign not found</p>
+              <p className="text-slate-500">Кампания не найдена</p>
             </div>
           </main>
         </div>
@@ -150,40 +148,40 @@ const EditCampaign = () => {
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Campaign
+              Назад к кампаниям
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Edit Campaign</h1>
-              <p className="text-slate-600">Update your AI-powered marketing campaign</p>
+              <h1 className="text-2xl font-bold text-slate-900">Редактирование кампании</h1>
+              <p className="text-slate-600">Обновите свою AI маркетинговую кампанию</p>
             </div>
           </div>
 
           <div className="max-w-2xl">
             <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
               <div>
-                <Label htmlFor="name">Campaign Name</Label>
+                <Label htmlFor="name">Название кампании</Label>
                 <Input 
                   id="name" 
                   name="name" 
-                  placeholder="Enter campaign name" 
+                  placeholder="Введите название кампании" 
                   defaultValue={campaign.name}
                   required 
                 />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Описание</Label>
                 <Textarea 
                   id="description" 
                   name="description" 
-                  placeholder="Describe your campaign goals and target audience" 
+                  placeholder="Опишите цели и целевую аудиторию кампании" 
                   defaultValue={campaign.description}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="budget">Budget</Label>
+                  <Label htmlFor="budget">Бюджет</Label>
                   <Input 
                     id="budget" 
                     name="budget" 
@@ -194,7 +192,7 @@ const EditCampaign = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="duration">Duration (days)</Label>
+                  <Label htmlFor="duration">Длительность (дней)</Label>
                   <Input 
                     id="duration" 
                     name="duration" 
@@ -207,7 +205,7 @@ const EditCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="target">Target Audience</Label>
+                <Label htmlFor="target">Целевая аудитория (сегмент)</Label>
                 <select 
                   id="target" 
                   name="target" 
@@ -216,7 +214,7 @@ const EditCampaign = () => {
                   onChange={(e) => setSelectedTargetAudience(e.target.value)}
                   required
                 >
-                  <option value="">Select target audience</option>
+                  <option value="">Выберите сегмент</option>
                   {segments.map((segment) => (
                     <option key={segment} value={segment}>{segment}</option>
                   ))}
@@ -224,7 +222,7 @@ const EditCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="agent">Choose Agent</Label>
+                <Label htmlFor="agent">Выберите агента</Label>
                 <select 
                   id="agent" 
                   name="agent" 
@@ -234,7 +232,7 @@ const EditCampaign = () => {
                   required 
                   disabled={loadingAgents}
                 >
-                  <option value="">Select agent</option>
+                  <option value="">Выберите агента</option>
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name} ({agent.role})
@@ -244,7 +242,7 @@ const EditCampaign = () => {
               </div>
 
               <div>
-                <Label htmlFor="knowledge">Knowledge Base Usage (Optional)</Label>
+                <Label htmlFor="knowledge">База знаний (необязательно)</Label>
                 <select 
                   id="knowledge" 
                   name="knowledge" 
@@ -253,7 +251,7 @@ const EditCampaign = () => {
                   onChange={(e) => setSelectedKnowledgeBaseId(e.target.value)}
                   disabled={loadingKnowledgeBases}
                 >
-                  <option value="">None</option>
+                  <option value="">Не использовать</option>
                   {knowledgeBases.map((kb) => (
                     <option key={kb.id} value={kb.id}>{kb.name}</option>
                   ))}
@@ -262,7 +260,7 @@ const EditCampaign = () => {
 
               <div className="flex justify-end space-x-4">
                 <Button type="button" variant="outline" onClick={() => navigate(`/campaigns/${id}`)}>
-                  Cancel
+                  Отмена
                 </Button>
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
                   {loading ? (
@@ -270,7 +268,7 @@ const EditCampaign = () => {
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  {loading ? 'Updating...' : 'Update Campaign'}
+                  {loading ? 'Обновление...' : 'Обновить кампанию'}
                 </Button>
               </div>
             </form>
@@ -281,4 +279,4 @@ const EditCampaign = () => {
   );
 };
 
-export default EditCampaign; 
+export default CampaignEdit; 

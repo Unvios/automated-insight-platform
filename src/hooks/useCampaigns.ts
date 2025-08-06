@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { campaignsApi, Campaign, CampaignsResponse } from '@/services/campaigns';
+import { campaignsApi, ICampaign, CampaignsResponse } from '@/services/campaigns';
 import { useToast } from '@/hooks/use-toast';
 
 export const useCampaigns = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<ICampaign[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -65,7 +65,7 @@ export const useCampaigns = () => {
     }
   };
 
-  const updateCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
+  const updateCampaign = async (campaignId: string, updates: Partial<ICampaign>) => {
     try {
       const updatedCampaign = await campaignsApi.update(campaignId, updates);
       setCampaigns((prev) =>

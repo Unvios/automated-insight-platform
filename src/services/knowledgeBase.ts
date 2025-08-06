@@ -1,7 +1,7 @@
 import { getApiUrl } from '@/config/api';
 
 // Типы данных
-export interface KnowledgeBase {
+export interface IKnowledgeBase {
     id: string;
     name: string;
     description?: string | null;

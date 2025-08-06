@@ -23,6 +23,7 @@ export const useCustomers = () => {
     status?: string;
     segment?: string;
   } = {}) => {
+    console.log('fetchCustomers вызван с параметрами:', params);
     try {
       setLoading(true);
       setError(null);
@@ -30,11 +31,18 @@ export const useCustomers = () => {
       const currentStatus = params.status !== undefined ? params.status : filters.status;
       const currentSegment = params.segment !== undefined ? params.segment : filters.segment;
       
+      console.log('Параметры фильтрации:', {
+        paramsStatus: params.status,
+        currentStatus,
+        filtersStatus: filters.status,
+        willSendStatus: currentStatus && currentStatus !== '' ? currentStatus : undefined,
+      });
+      
       const response = await customersApi.findMany({
         page: params.page || pagination.page,
         limit: params.limit || pagination.limit,
-        status: currentStatus || undefined,
-        segment: currentSegment || undefined,
+        status: currentStatus && currentStatus !== '' ? currentStatus : undefined,
+        segment: currentSegment && currentSegment !== '' ? currentSegment : undefined,
       });
 
       setCustomers(response.data);
@@ -44,12 +52,12 @@ export const useCustomers = () => {
         total: response.total,
       });
 
-      if (params.status !== undefined) {
-        setFilters(prev => ({ ...prev, status: params.status || '' }));
-      }
-      if (params.segment !== undefined) {
-        setFilters(prev => ({ ...prev, segment: params.segment || '' }));
-      }
+      // Обновляем фильтры в состоянии
+      setFilters(prev => ({
+        ...prev,
+        ...(params.status !== undefined && { status: params.status || '' }),
+        ...(params.segment !== undefined && { segment: params.segment || '' }),
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch customers');
       toast({

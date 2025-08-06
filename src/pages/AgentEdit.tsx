@@ -71,7 +71,7 @@ const updateAgent = async (id: string, agentData: UpdateAgentData): Promise<unkn
   return response.json();
 };
 
-const TestAgent = () => {
+const AgentEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
@@ -378,12 +378,12 @@ const TestAgent = () => {
     if (settings.voice) {
       toast({
         title: "Voice Preview",
-        description: `Playing preview of ${voices.find(v => v.id === settings.voice)?.name}`,
+        description: `Предпросмотр голоса ${voices.find(v => v.id === settings.voice)?.name}`,
       });
     } else {
       toast({
         title: "No Voice Selected",
-        description: "Please select a voice first to preview it.",
+        description: "Пожалуйста, выберите голос для предпросмотра.",
         variant: "destructive"
       });
     }
@@ -513,11 +513,11 @@ const TestAgent = () => {
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Agent
+              Назад к агенту
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Test Agent: {agent?.name}</h1>
-              <p className="text-slate-600">Test and configure your agent settings</p>
+              <h1 className="text-2xl font-bold text-slate-900">Тестирование агента: {agent?.name}</h1>
+              <p className="text-slate-600">Тестирование и настройка настроек агента</p>
             </div>
           </div>
 
@@ -526,7 +526,7 @@ const TestAgent = () => {
             <div>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
                 <div>
-                  <Label htmlFor="name">Agent Name</Label>
+                  <Label htmlFor="name">Имя агента</Label>
                   <Input 
                     id="name" 
                     value={agent?.name || ''}
@@ -536,17 +536,17 @@ const TestAgent = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="role">Role/Specialization</Label>
+                  <Label htmlFor="role">Роль/Специализация</Label>
                   <Textarea 
                     id="role" 
                     value={settings.role}
                     onChange={(e) => setSettings({...settings, role: e.target.value})}
-                    placeholder="Describe the agent's role, responsibilities, and areas of expertise in detail" 
+                    placeholder="Опишите роль, обязанности и области знаний агента в деталях" 
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="model">AI Model</Label>
+                  <Label htmlFor="model">Модель AI</Label>
                   <div className="flex items-center space-x-2 mb-2">
                     <Checkbox 
                       id="freeOnly" 
@@ -559,7 +559,7 @@ const TestAgent = () => {
                   </div>
                   <Select value={settings.model} onValueChange={(value) => setSettings({...settings, model: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select AI model" />
+                      <SelectValue placeholder="Выберите модель AI" />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredModels.map((model) => (
@@ -572,11 +572,11 @@ const TestAgent = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="voice">Voice</Label>
+                  <Label htmlFor="voice">Голос</Label>
                   <div className="flex space-x-2">
                     <Select value={settings.voice} onValueChange={(value) => setSettings({...settings, voice: value})}>
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select voice" />
+                        <SelectValue placeholder="Выберите голос" />
                       </SelectTrigger>
                       <SelectContent>
                         {voices.map((voice) => (
@@ -595,12 +595,12 @@ const TestAgent = () => {
 
 
                 <div>
-                  <Label htmlFor="instructions">System Instructions</Label>
+                  <Label htmlFor="instructions">Системные инструкции</Label>
                   <Textarea 
                     id="instructions" 
                     value={settings.systemPrompt}
                     onChange={(e) => setSettings({...settings, systemPrompt: e.target.value})}
-                    placeholder="Provide specific instructions for how the agent should behave and respond"
+                    placeholder="Укажите конкретные инструкции о том, как должен вести себя и отвечать агент"
                     className="min-h-[200px]"
                   />
                 </div>
@@ -613,17 +613,17 @@ const TestAgent = () => {
                       onCheckedChange={(checked) => setSettings({...settings, ssmlEnabled: !!checked})}
                     />
                     <Label htmlFor="ssmlEnabled" className="text-sm font-normal cursor-pointer">
-                      Использовать SSML
+                      Использовать SSML (Speech Synthesis Markup Language)
                     </Label>
                   </div>
                   {settings.ssmlEnabled && (
                     <div>
-                      <Label htmlFor="ssmlInstructions">SSML Instructions</Label>
+                      <Label htmlFor="ssmlInstructions">Инструкции SSML</Label>
                       <Textarea 
                         id="ssmlInstructions" 
                         value={settings.ssmlInstructions}
                         onChange={(e) => setSettings({...settings, ssmlInstructions: e.target.value})}
-                        placeholder="Provide SSML instructions for speech synthesis"
+                        placeholder="Укажите конкретные инструкции для синтеза речи"
                         className="min-h-[100px]"
                       />
                     </div>
@@ -639,18 +639,18 @@ const TestAgent = () => {
                       onCheckedChange={(checked) => setVadConfigEnabled(!!checked)}
                     />
                     <Label htmlFor="vadConfigEnabled" className="text-sm font-normal cursor-pointer">
-                      Использовать VAD Configuration
+                      Использовать VAD Configuration (Voice Activity Detection)
                     </Label>
                   </div>
                   
                   {vadConfigEnabled && (
                     <div>
-                      <h3 className="text-lg font-medium text-slate-900 mb-3">VAD Configuration</h3>
+                      <h3 className="text-lg font-medium text-slate-900 mb-3">Настройки VAD</h3>
                       <p className="text-sm text-slate-600 mb-4">Настройки определения активности голоса (Voice Activity Detection)</p>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="vadMinSpeechDuration">Min Speech Duration (ms)</Label>
+                          <Label htmlFor="vadMinSpeechDuration">Минимальная длительность речи (мс)</Label>
                           <Input 
                             id="vadMinSpeechDuration" 
                             type="number"
@@ -662,7 +662,7 @@ const TestAgent = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadMinSilenceDuration">Min Silence Duration (ms)</Label>
+                          <Label htmlFor="vadMinSilenceDuration">Минимальная длительность тишины (мс)</Label>
                           <Input 
                             id="vadMinSilenceDuration" 
                             type="number"
@@ -674,7 +674,7 @@ const TestAgent = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadPrefixPaddingDuration">Prefix Padding Duration (ms)</Label>
+                          <Label htmlFor="vadPrefixPaddingDuration">Длительность паузы (мс)</Label>
                           <Input 
                             id="vadPrefixPaddingDuration" 
                             type="number"
@@ -686,7 +686,7 @@ const TestAgent = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadMaxBufferedSpeech">Max Buffered Speech (ms)</Label>
+                          <Label htmlFor="vadMaxBufferedSpeech">Максимальная длительность речи (мс)</Label>
                           <Input 
                             id="vadMaxBufferedSpeech" 
                             type="number"
@@ -698,7 +698,7 @@ const TestAgent = () => {
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadActivationThreshold">Activation Threshold</Label>
+                          <Label htmlFor="vadActivationThreshold">Порог активации</Label>
                           <Input 
                             id="vadActivationThreshold" 
                             type="number"
@@ -721,7 +721,7 @@ const TestAgent = () => {
                                 onCheckedChange={(checked) => setVadConfig({...vadConfig, vadForceCPU: !!checked})}
                               />
                               <Label htmlFor="vadForceCPU" className="text-sm font-normal cursor-pointer">
-                                Force CPU Usage
+                                Принудительное использование CPU
                               </Label>
                             </div>
                             <p className="text-xs text-slate-500 mt-1">Принудительное использование CPU для обработки</p>
@@ -734,11 +734,11 @@ const TestAgent = () => {
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={() => navigate(`/agents/${id}`)}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button onClick={handleSaveSettings} className="bg-blue-600 hover:bg-blue-700" disabled={isSaving}>
                     <Settings className="h-4 w-4 mr-2" />
-                    {isSaving ? 'Сохранение...' : 'Save Settings'}
+                    {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
                   </Button>
                 </div>
               </div>
@@ -749,8 +749,8 @@ const TestAgent = () => {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Test Agent</h3>
-                    <p className="text-slate-600">Test your agent configuration with voice or text</p>
+                    <h3 className="text-lg font-semibold text-slate-900">Тестирование агента</h3>
+                    <p className="text-slate-600">Тестирование настроек агента с голосом или текстом</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -759,7 +759,7 @@ const TestAgent = () => {
                       onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
                     />
                     <label htmlFor="show-statistics-test" className="text-sm text-slate-600 cursor-pointer">
-                      Show statistics
+                      Показать статистику
                     </label>
                   </div>
                 </div>
@@ -770,7 +770,7 @@ const TestAgent = () => {
                     className={`w-full ${isConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
                   >
                     {isConnected ? <PhoneOff className="h-4 w-4 mr-2" /> : <Phone className="h-4 w-4 mr-2" />}
-                    {isConnected ? 'Завершить тест' : 'Тестировать агента'}
+                    {isConnected ? 'Завершить тест' : 'Начать тест'}
                     {isRecording && <Mic className="h-4 w-4 ml-2" />}
                   </Button>
                 </div>
@@ -850,4 +850,4 @@ const TestAgent = () => {
   );
 };
 
-export default TestAgent; 
+export default AgentEdit; 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Play, Pause, BarChart3, Trash2 } from 'lucide-react';
+import { Plus, Play, Pause, BarChart3, Trash2, Pencil } from 'lucide-react';
 import { useCampaigns } from '@/hooks/useCampaigns';
 
 const Campaigns = () => {
@@ -24,10 +24,10 @@ const Campaigns = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                Campaign Management
+                Управление кампаниями
               </h1>
               <p className="text-slate-600">
-                Create and manage AI-powered marketing campaigns
+                Создание и управление AI маркетинговыми кампаниями
               </p>
             </div>
             <Button 
@@ -35,7 +35,7 @@ const Campaigns = () => {
               onClick={() => navigate('/campaigns/new')}
             >
               <Plus className="h-4 w-4 mr-2" />
-              New Campaign
+              Новая кампания
             </Button>
           </div>
 
@@ -44,7 +44,7 @@ const Campaigns = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Total Campaigns</p>
+                  <p className="text-sm text-slate-600">Всего кампаний</p>
                   <p className="text-2xl font-bold text-slate-900">{total}</p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-blue-500" />
@@ -53,7 +53,7 @@ const Campaigns = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Active Now</p>
+                  <p className="text-sm text-slate-600">Активные</p>
                   <p className="text-2xl font-bold text-green-600">
                     {campaigns.filter(c => c.status === 'active').length}
                   </p>
@@ -66,29 +66,29 @@ const Campaigns = () => {
           {/* Campaigns List */}
           <div className="bg-white rounded-xl shadow-sm border border-slate-200">
             <div className="p-6 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">All Campaigns</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Все кампании</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Campaign
+                      Кампания
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Status
+                      Статус
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Engagement
+                      Вовлеченность
+                    </th>
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Бюджет
+                    </th> */}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Кол-во разговоров
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Budget
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      ROI
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Actions
+                      Действия
                     </th>
                   </tr>
                 </thead>
@@ -112,9 +112,9 @@ const Campaigns = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                         {campaign.engagedContacts.toLocaleString()} ({campaign.totalContacts > 0 ? Math.round((campaign.engagedContacts/campaign.totalContacts)*100) : 0}%)
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                         ${campaign.spent.toLocaleString()} / ${campaign.budget.toLocaleString()}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                         {campaign.conversions}
                       </td>
@@ -148,7 +148,7 @@ const Campaigns = () => {
                             e.stopPropagation(); 
                             navigate(`/campaigns/${campaign.id}/edit`);
                           }}>
-                            Edit
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Bot, Settings, Play, Pause, Activity, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiUrl } from '@/config/api';
+import { conversationsApi } from '@/services/conversations';
 
 // Интерфейс для агента
 interface Agent {
@@ -18,8 +19,9 @@ interface Agent {
   model: string;
   voice: string;
   systemPrompt: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt?: number;
 }
 
 // Интерфейс для ответа API
@@ -77,13 +79,15 @@ const Agents = () => {
         page: 1,
         limit: 50, // Загружаем больше агентов для статистики
       });
-      
+
+      const conversationsCount = await conversationsApi.countAll();
+
       setAgents(response.data);
       
       // Вычисляем статистику
       setStats({
         total: response.total,
-        conversations: response.data.length * 10, // Моковые данные для демонстрации
+        conversations: conversationsCount,
         avgSuccessRate: 91 // Моковые данные для демонстрации
       });
     } catch (err) {
@@ -105,8 +109,8 @@ const Agents = () => {
   }, []);
 
   // Функция для форматирования даты
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateString: string | number) => {
+    const date = new Date(Number(dateString));
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
@@ -132,10 +136,10 @@ const Agents = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                AI Agents
+                AI Агенты
               </h1>
               <p className="text-slate-600">
-                Manage and configure your AI assistants
+                Управляйте и настраивайте своих AI ассистентов
               </p>
             </div>
             <Button 
@@ -143,16 +147,16 @@ const Agents = () => {
               onClick={() => navigate('/agents/create')}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Agent
+              Создать агента
             </Button>
           </div>
 
           {/* Agent Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Total Agents</p>
+                  <p className="text-sm text-slate-600">Всего агентов</p>
                   <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                 </div>
                 <Bot className="h-8 w-8 text-blue-500" />
@@ -161,21 +165,21 @@ const Agents = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Conversations</p>
+                  <p className="text-sm text-slate-600">Разговоры</p>
                   <p className="text-2xl font-bold text-slate-900">{stats.conversations}</p>
                 </div>
                 <Play className="h-8 w-8 text-purple-500" />
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            {/* <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Avg Success Rate</p>
+                  <p className="text-sm text-slate-600">Средний процент успеха</p>
                   <p className="text-2xl font-bold text-orange-600">{stats.avgSuccessRate}%</p>
                 </div>
                 <Settings className="h-8 w-8 text-orange-500" />
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Loading State */}
@@ -230,10 +234,6 @@ const Agents = () => {
                     </div>
 
                     <div className="space-y-3 mb-4">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">Специализация</span>
-                        <span className="text-sm font-medium text-slate-900">{agent.specialization}</span>
-                      </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-slate-600">Модель</span>
                         <span className="text-sm font-medium text-slate-900">{agent.model}</span>

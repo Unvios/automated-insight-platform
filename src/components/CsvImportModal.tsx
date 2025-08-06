@@ -109,28 +109,28 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
           className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
         >
           <Upload className="h-4 w-4 mr-2" />
-          Import CSV
+          Импорт CSV
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Import Customers from CSV</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Импорт клиентов из CSV</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Формат CSV */}
           <div>
-            <h3 className="text-lg font-medium text-slate-900 mb-3">CSV Format</h3>
+            <h3 className="text-lg font-medium text-slate-900 mb-3">Формат CSV</h3>
             <div className="bg-slate-50 rounded-lg p-4 space-y-3">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-red-600">Required fields:</span>
+                  <span className="font-medium text-red-600">Обязательные поля:</span>
                   <ul className="mt-1 space-y-1 text-slate-600">
                     <li>• phoneNumber</li>
                   </ul>
                 </div>
                 <div>
-                  <span className="font-medium text-slate-700">Optional fields:</span>
+                  <span className="font-medium text-slate-700">Необязательные поля:</span>
                   <ul className="mt-1 space-y-1 text-slate-600">
                     <li>• firstName</li>
                     <li>• lastName</li>
@@ -155,7 +155,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
 
           {/* Загрузка файла */}
           <div>
-            <h3 className="text-lg font-medium text-slate-900 mb-3">Upload CSV File</h3>
+            <h3 className="text-lg font-medium text-slate-900 mb-3">Загрузить CSV файл</h3>
             <div 
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 isDragOver 
@@ -174,10 +174,10 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
                 isDragOver ? 'text-blue-700' : 'text-slate-600'
               }`}>
                 {selectedFile 
-                  ? `Selected: ${selectedFile.name}` 
+                  ? `Выбран: ${selectedFile.name}` 
                   : isDragOver 
-                    ? 'Drop your CSV file here' 
-                    : 'Drop your CSV file here or click to browse'
+                    ? 'Перетащите ваш CSV файл сюда' 
+                    : 'Перетащите ваш CSV файл сюда или нажмите для выбора'
                 }
               </p>
               <input
@@ -194,7 +194,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
                 disabled={isDragOver}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Choose File
+                Выбрать файл
               </Button>
             </div>
           </div>
@@ -206,7 +206,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
               onClick={() => setIsOpen(false)}
               disabled={importing}
             >
-              Cancel
+              Отмена
             </Button>
             <Button 
               onClick={handleImport}
@@ -214,7 +214,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onImport, importing }) 
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {importing ? 'Importing...' : 'Import Customers'}
+              {importing ? 'Импорт...' : 'Импорт клиентов'}
             </Button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { getApiUrl } from '@/config/api';
 
 // Типы данных
-export interface Campaign {
+export interface ICampaign {
     id: string
     name: string
     description: string
@@ -21,7 +21,7 @@ export interface Campaign {
 }
 
 export interface CampaignsResponse {
-  data: Campaign[];
+  data: ICampaign[];
   total: number;
   page: number;
   limit: number;
@@ -51,7 +51,7 @@ export const campaignsApi = {
   },
 
   // Получить кампанию по ID
-  async findOne(campaignId: string): Promise<Campaign> {
+  async findOne(campaignId: string): Promise<ICampaign> {
     const response = await fetch(getApiUrl('campaigns/find-one'), {
       method: 'POST',
       headers: {
@@ -76,7 +76,7 @@ export const campaignsApi = {
     targetAudience: string;
     agentId: string;
     knowledgeBaseId: string;
-  }): Promise<Campaign> {
+  }): Promise<ICampaign> {
     const response = await fetch(getApiUrl('campaigns/create-one'), {
       method: 'POST',
       headers: {
@@ -93,7 +93,7 @@ export const campaignsApi = {
   },
 
   // Обновить кампанию
-  async update(campaignId: string, updates: Partial<Campaign>): Promise<Campaign> {
+  async update(campaignId: string, updates: Partial<ICampaign>): Promise<ICampaign> {
     const response = await fetch(getApiUrl('campaigns/update-one'), {
       method: 'POST',
       headers: {

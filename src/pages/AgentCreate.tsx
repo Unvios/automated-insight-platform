@@ -51,7 +51,7 @@ const createAgent = async (agentData: CreateAgentData): Promise<unknown> => {
   return response.json();
 };
 
-const CreateAgent = () => {
+const AgentCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [testMessage, setTestMessage] = useState('');
@@ -380,8 +380,8 @@ loudness="high">песиков?</paint></speak>
       });
     } else {
       toast({
-        title: "No Voice Selected",
-        description: "Please select a voice first to preview it.",
+        title: "Голос не выбран",
+        description: "Пожалуйста, выберите голос для предварительного прослушивания.",
         variant: "destructive"
       });
     }
@@ -453,8 +453,8 @@ loudness="high">песиков?</paint></speak>
               Back to Agents
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Create AI Agent</h1>
-              <p className="text-slate-600">Configure your intelligent assistant</p>
+              <h1 className="text-2xl font-bold text-slate-900">Создание AI агента</h1>
+              <p className="text-slate-600">Настройте своего AI агента</p>
             </div>
           </div>
 
@@ -463,29 +463,29 @@ loudness="high">песиков?</paint></speak>
             <div>
               <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 space-y-6">
                 <div>
-                  <Label htmlFor="name">Agent Name</Label>
+                  <Label htmlFor="name">Название агента</Label>
                   <Input 
                     id="name" 
                     value={agentConfig.name}
                     onChange={(e) => setAgentConfig({...agentConfig, name: e.target.value})}
-                    placeholder="Enter agent name" 
+                    placeholder="Введите название агента" 
                     required 
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="role">Role/Specialization</Label>
+                  <Label htmlFor="role">Роль/Специализация</Label>
                   <Textarea 
                     id="role" 
                     value={agentConfig.role}
                     onChange={(e) => setAgentConfig({...agentConfig, role: e.target.value})}
-                    placeholder="Describe the agent's role, responsibilities, and areas of expertise in detail" 
+                    placeholder="Опишите роль, обязанности и области экспертизы агента в деталях" 
                     required 
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="model">AI Model</Label>
+                  <Label htmlFor="model">Модель AI</Label>
                   <div className="flex items-center space-x-2 mb-2">
                     <Checkbox 
                       id="freeOnly" 
@@ -498,7 +498,7 @@ loudness="high">песиков?</paint></speak>
                   </div>
                   <Select value={agentConfig.model} onValueChange={(value) => setAgentConfig({...agentConfig, model: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select AI model" />
+                      <SelectValue placeholder="Выберите модель AI" />
                     </SelectTrigger>
                     <SelectContent>
                       {filteredModels.map((model) => (
@@ -511,11 +511,11 @@ loudness="high">песиков?</paint></speak>
                 </div>
 
                 <div>
-                  <Label htmlFor="voice">Voice</Label>
+                  <Label htmlFor="voice">Голос</Label>
                   <div className="flex space-x-2">
                     <Select value={agentConfig.voice} onValueChange={(value) => setAgentConfig({...agentConfig, voice: value})}>
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select voice" />
+                        <SelectValue placeholder="Выберите голос" />
                       </SelectTrigger>
                       <SelectContent>
                         {voices.map((voice) => (
@@ -525,19 +525,19 @@ loudness="high">песиков?</paint></speak>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button type="button" variant="outline" onClick={handleListenVoice}>
+                    {/* <Button type="button" variant="outline" onClick={handleListenVoice}>
                       <Volume2 className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="instructions">System Instructions</Label>
+                  <Label htmlFor="instructions">Системные инструкции</Label>
                   <Textarea 
                     id="instructions" 
                     value={agentConfig.systemPrompt}
                     onChange={(e) => setAgentConfig({...agentConfig, systemPrompt: e.target.value})}
-                    placeholder="Provide specific instructions for how the agent should behave and respond"
+                    placeholder="Предоставьте конкретные инструкции о том, как агент должен вести себя и отвечать"
                     className="min-h-[200px]"
                   />
                 </div>
@@ -555,12 +555,12 @@ loudness="high">песиков?</paint></speak>
                   </div>
                   {agentConfig.ssmlEnabled && (
                     <div>
-                      <Label htmlFor="ssmlInstructions">SSML Instructions</Label>
+                      <Label htmlFor="ssmlInstructions">Инструкции SSML</Label>
                       <Textarea 
                         id="ssmlInstructions" 
                         value={agentConfig.ssmlInstructions}
                         onChange={(e) => setAgentConfig({...agentConfig, ssmlInstructions: e.target.value})}
-                        placeholder="Provide SSML instructions for speech synthesis"
+                        placeholder="Предоставьте инструкции SSML для синтеза речи"
                         className="min-h-[300px]"
                       />
                     </div>
@@ -576,18 +576,18 @@ loudness="high">песиков?</paint></speak>
                       onCheckedChange={(checked) => setVadConfigEnabled(!!checked)}
                     />
                     <Label htmlFor="vadConfigEnabled" className="text-sm font-normal cursor-pointer">
-                      Использовать VAD Configuration
+                      Использовать настройки VAD
                     </Label>
                   </div>
                   
                   {vadConfigEnabled && (
                     <div>
-                      <h3 className="text-lg font-medium text-slate-900 mb-3">VAD Configuration</h3>
+                      <h3 className="text-lg font-medium text-slate-900 mb-3">Настройки VAD</h3>
                       <p className="text-sm text-slate-600 mb-4">Настройки определения активности голоса (Voice Activity Detection)</p>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="vadMinSpeechDuration">Min Speech Duration (ms)</Label>
+                          <Label htmlFor="vadMinSpeechDuration">Минимальная длительность речи (мс)</Label>
                           <Input 
                             id="vadMinSpeechDuration" 
                             type="number"
@@ -599,7 +599,7 @@ loudness="high">песиков?</paint></speak>
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadMinSilenceDuration">Min Silence Duration (ms)</Label>
+                          <Label htmlFor="vadMinSilenceDuration">Минимальная длительность тишины (мс)</Label>
                           <Input 
                             id="vadMinSilenceDuration" 
                             type="number"
@@ -611,7 +611,7 @@ loudness="high">песиков?</paint></speak>
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadPrefixPaddingDuration">Prefix Padding Duration (ms)</Label>
+                          <Label htmlFor="vadPrefixPaddingDuration">Длительность паузы (мс)</Label>
                           <Input 
                             id="vadPrefixPaddingDuration" 
                             type="number"
@@ -623,7 +623,7 @@ loudness="high">песиков?</paint></speak>
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadMaxBufferedSpeech">Max Buffered Speech (ms)</Label>
+                          <Label htmlFor="vadMaxBufferedSpeech">Максимальная длительность речи (мс)</Label>
                           <Input 
                             id="vadMaxBufferedSpeech" 
                             type="number"
@@ -635,7 +635,7 @@ loudness="high">песиков?</paint></speak>
                         </div>
                         
                         <div>
-                          <Label htmlFor="vadActivationThreshold">Activation Threshold</Label>
+                          <Label htmlFor="vadActivationThreshold">Порог активации</Label>
                           <Input 
                             id="vadActivationThreshold" 
                             type="number"
@@ -658,7 +658,7 @@ loudness="high">песиков?</paint></speak>
                                 onCheckedChange={(checked) => setVadConfig({...vadConfig, vadForceCPU: !!checked})}
                               />
                               <Label htmlFor="vadForceCPU" className="text-sm font-normal cursor-pointer">
-                                Force CPU Usage
+                                Использовать CPU
                               </Label>
                             </div>
                             <p className="text-xs text-slate-500 mt-1">Принудительное использование CPU для обработки</p>
@@ -683,11 +683,11 @@ loudness="high">песиков?</paint></speak>
 
                 <div className="flex justify-end space-x-4">
                   <Button type="button" variant="outline" onClick={() => navigate('/agents')}>
-                    Cancel
+                    Отмена
                   </Button>
                   <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isCreating}>
                     <Bot className="h-4 w-4 mr-2" />
-                    {isCreating ? 'Создание...' : 'Create Agent'}
+                    {isCreating ? 'Создание...' : 'Создать агента'}
                   </Button>
                 </div>
               </form>
@@ -698,8 +698,8 @@ loudness="high">песиков?</paint></speak>
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">Test Agent</h3>
-                    <p className="text-slate-600">Test your agent configuration before creating it</p>
+                    <h3 className="text-lg font-semibold text-slate-900">Тестирование агента</h3>
+                    <p className="text-slate-600">Тестируйте настройки агента перед созданием</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -708,7 +708,7 @@ loudness="high">песиков?</paint></speak>
                       onCheckedChange={(checked) => setShowStatistics(checked as boolean)}
                     />
                     <label htmlFor="show-statistics-test" className="text-sm text-slate-600 cursor-pointer">
-                      Show statistics
+                        Показать статистику
                     </label>
                   </div>
                 </div>
@@ -815,4 +815,4 @@ loudness="high">песиков?</paint></speak>
   );
 };
 
-export default CreateAgent;
+export default AgentCreate;

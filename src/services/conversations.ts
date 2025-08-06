@@ -105,4 +105,20 @@ export const conversationsApi = {
 
     return response.json();
   },
+
+  async countAll(): Promise<number> {
+    const response = await fetch(getApiUrl('conversations/count-all'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch conversations: ${response.statusText}`);
+    }
+
+    return await response.json();
+  },
 }; 

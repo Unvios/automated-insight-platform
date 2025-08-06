@@ -18,11 +18,11 @@ import {
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
-  { name: 'AI Agents', href: '/agents', icon: Bot },
-  { name: 'Conversations', href: '/conversations', icon: MessageSquare },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen },
+  { name: 'Кампании', href: '/campaigns', icon: Megaphone },
+  { name: 'AI Агенты', href: '/agents', icon: Bot },
+  { name: 'Разговоры', href: '/conversations', icon: MessageSquare },
+  { name: 'Клиенты', href: '/customers', icon: Users },
+  { name: 'Базы знаний', href: '/knowledge-base', icon: BookOpen },
 ];
 
 const Sidebar = () => {
@@ -53,7 +53,7 @@ const Sidebar = () => {
         </div>
       </nav>
 
-      <div className="mt-8 px-3">
+      {/* <div className="mt-8 px-3">
         <h3 className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
           Quick Stats
         </h3>
@@ -77,7 +77,7 @@ const Sidebar = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

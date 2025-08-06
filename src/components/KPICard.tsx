@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 interface KPICardProps {
   title: string;
   value: string;
-  change: string;
-  trend: 'up' | 'down';
+  change?: string;
+  trend?: 'up' | 'down';
   icon: LucideIcon;
   iconColor: string;
 }
@@ -33,7 +33,7 @@ const KPICard: React.FC<KPICardProps> = ({
           </div>
         </div>
       </div>
-      
+      {change && (
       <div className="flex items-center mt-4">
         {trend === 'up' ? (
           <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -48,8 +48,9 @@ const KPICard: React.FC<KPICardProps> = ({
         >
           {change}
         </span>
-        <span className="text-sm text-slate-500 ml-1">vs last week</span>
-      </div>
+          <span className="text-sm text-slate-500 ml-1">vs last week</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ const QuickActions = () => {
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-      <h3 className="text-lg font-semibold text-slate-900 mb-6">Quick Actions</h3>
+      <h3 className="text-lg font-semibold text-slate-900 mb-6">Быстрые действия</h3>
       
       <div className="grid grid-cols-2 gap-4">
         <Button 
@@ -18,7 +18,7 @@ const QuickActions = () => {
           onClick={() => navigate('/campaigns/new')}
         >
           <Plus className="h-6 w-6" />
-          <span className="text-sm font-medium">New Campaign</span>
+          <span className="text-sm font-medium">Новая кампания</span>
         </Button>
         
         <Button 
@@ -27,35 +27,16 @@ const QuickActions = () => {
           onClick={() => navigate('/agents/create')}
         >
           <Bot className="h-6 w-6" />
-          <span className="text-sm font-medium">Create Agent</span>
-        </Button>
-        
-        <Button 
-          className="h-auto p-4 flex flex-col items-center space-y-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-          variant="outline"
-          onClick={() => navigate('/analytics')}
-        >
-          <BarChart3 className="h-6 w-6" />
-          <span className="text-sm font-medium">View Reports</span>
+          <span className="text-sm font-medium">Создать агента</span>
         </Button>
         
         <Button 
           className="h-auto p-4 flex flex-col items-center space-y-2 bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
           variant="outline"
-          onClick={() => navigate('/customers')}
+          onClick={() => navigate('/customers/add')}
         >
           <Users className="h-6 w-6" />
-          <span className="text-sm font-medium">Manage Customers</span>
-        </Button>
-      </div>
-      
-      <div className="mt-6 pt-6 border-t border-slate-100">
-        <Button 
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          onClick={() => navigate('/ai-campaign-wizard')}
-        >
-          <Zap className="h-4 w-4 mr-2" />
-          AI Campaign Wizard
+          <span className="text-sm font-medium">Новый клиент</span>
         </Button>
       </div>
     </div>
