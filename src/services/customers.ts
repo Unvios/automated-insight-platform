@@ -88,7 +88,7 @@ export const customersApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create customer: ${response.statusText}`);
+      throw new Error(`Ошибка при создании клиента: ${(await response.json()).message}`);
     }
 
     return response.json();

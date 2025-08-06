@@ -79,6 +79,9 @@ const Campaigns = () => {
                       Статус
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Сегмент
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Вовлеченность
                     </th>
                     {/* <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -108,6 +111,9 @@ const Campaigns = () => {
                         }`}>
                           {campaign.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                        {campaign.targetAudience}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                         {campaign.engagedContacts.toLocaleString()} ({campaign.totalContacts > 0 ? Math.round((campaign.engagedContacts/campaign.totalContacts)*100) : 0}%)
