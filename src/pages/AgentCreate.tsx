@@ -58,7 +58,30 @@ const AgentCreate = () => {
   const [testResponse, setTestResponse] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [showStatistics, setShowStatistics] = useState(true); // По умолчанию включен
+  const [functionsExpanded, setFunctionsExpanded] = useState(false); // По умолчанию свернут
   // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
+
+  // Список доступных функций LLM
+  const availableTools = [
+    {
+      name: 'findCustomer',
+      icon: '🔍',
+      description: 'Поиск клиента по номеру телефона. Возвращает информацию о клиенте если найден.',
+      example: '[[findCustomer]]'
+    },
+    {
+      name: 'getCustomerQuestions',
+      icon: '❓',
+      description: 'Получение списка вопросов для подбора подходящих вакансий клиенту.',
+      example: '[[getCustomerQuestions]]'
+    },
+    {
+      name: 'getCustomerVacancies',
+      icon: '💼',
+      description: 'Получение подходящих вакансий для клиента на основе его ответов на вопросы.',
+      example: '[[getCustomerVacancies]]'
+    }
+  ];
   
   // Ref для прокрутки чата в конец
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -529,6 +552,72 @@ loudness="high">песиков?</paint></speak>
                       <Volume2 className="h-4 w-4" />
                     </Button> */}
                   </div>
+                </div>
+
+                {/* Блок с доступными функциями LLM */}
+                <div className="mb-6">
+                  <div 
+                    className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                    onClick={() => setFunctionsExpanded(!functionsExpanded)}
+                  >
+                    <h3 className="text-sm font-medium text-blue-800 flex items-center gap-2">
+                      <span className="text-base">🛠️</span>
+                      Доступные функции LLM
+                    </h3>
+                    <span className={`text-blue-600 transition-transform duration-200 ${functionsExpanded ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </div>
+                  
+                  {functionsExpanded && (
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-gray-700 mb-4">
+                        <strong>Как использовать:</strong> В системном промпте указывайте функции в двойных квадратных скобках [[tool]].
+                      </p>
+                      
+                      <div className="p-3 bg-gray-100 rounded border-l-4 border-blue-500 mb-4">
+                        <p className="text-xs text-gray-600">
+                          <strong>Пример:</strong> "Задаем клиенту необходимые вопросы для подбора подходящих ему вакансий [[getCustomerQuestions]]."
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {availableTools.map((tool, index) => (
+                          <div key={index} className="bg-white p-3 rounded border border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-sm font-medium text-blue-700 flex items-center gap-1">
+                                <span>{tool.icon}</span>
+                                {tool.name}
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(tool.example);
+                                  toast({
+                                    title: "Скопировано!",
+                                    description: `${tool.example} скопирован в буфер обмена`,
+                                    duration: 2000,
+                                  });
+                                }}
+                                className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+                                title="Копировать в буфер обмена"
+                              >
+                                📋
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2">
+                              {tool.description}
+                            </p>
+                            <p className="text-xs text-gray-500 italic">
+                              Пример: {tool.example}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
