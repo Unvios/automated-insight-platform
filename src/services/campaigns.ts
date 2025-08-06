@@ -15,7 +15,7 @@ export interface ICampaign {
     status: string
     totalContacts: number
     engagedContacts: number
-    conversions: number
+    conversations: number
     createdAt: string
     updatedAt: string
 }

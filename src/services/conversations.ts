@@ -16,6 +16,7 @@ export interface Conversation {
     goal: string
     summary: string
     recommendation: string
+    sessionId?: string | null
     createdAt: string
     updatedAt: string
 }

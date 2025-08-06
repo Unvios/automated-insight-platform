@@ -227,7 +227,7 @@ const Campaign = () => {
                 {/* <div className="text-green-600 text-sm font-medium">+8.3%</div> */}
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{campaign.conversions}</p>
+                <p className="text-2xl font-bold text-slate-900">{campaign.conversations}</p>
                 <p className="text-sm text-slate-600">Разговоры</p>
               </div>
             </div>
@@ -237,7 +237,7 @@ const Campaign = () => {
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <DollarSign className="h-6 w-6 text-orange-600" />
                 </div>
-                <div className="text-green-600 text-sm font-medium">{campaign.conversions}</div>
+                <div className="text-green-600 text-sm font-medium">{campaign.conversations}</div>
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">${campaign.spent.toLocaleString()}</p>
@@ -285,7 +285,7 @@ const Campaign = () => {
                 {/* <div>
                   <p className="text-sm text-slate-600">Конверсия</p>
                   <p className="text-sm font-medium text-green-600">
-                    {campaign.engagedContacts > 0 ? ((campaign.conversions / campaign.engagedContacts) * 100).toFixed(1) : '0'}%
+                    {campaign.engagedContacts > 0 ? ((campaign.conversations / campaign.engagedContacts) * 100).toFixed(1) : '0'}%
                   </p>
                 </div> */}
               </div>

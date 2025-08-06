@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Send, Phone, Video, User, Bot, Clock, Star, Play, Eye, CheckCircle, XCircle, AlertCircle, Loader2, Timer, Mic, Brain, Volume2, Wrench } from 'lucide-react';
 import { useConversation } from '@/hooks/useConversations';
+import { AudioPlayer } from '@/components/AudioPlayer';
 import { Message } from '@/services/conversations';
 
 const Conversation = () => {
@@ -165,16 +166,10 @@ const Conversation = () => {
                 </div>
               </div>
 
-              {conversation?.type === 'call' && (
+              {conversation?.type === 'call' && conversation?.sessionId && (
                 <div className="mt-6 pt-6 border-t border-slate-200">
-                  <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
-                    <Play className="h-4 w-4 mr-2" />
-                    Слушать звонок
-                  </Button>
-                  {/* <Button className="w-full mb-2 bg-green-600 hover:bg-green-700">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Call Back
-                  </Button> */}
+                  <h4 className="text-sm font-medium text-slate-700 mb-3">Запись звонка</h4>
+                  <AudioPlayer sessionId={conversation.sessionId} />
                 </div>
               )}
             </div>

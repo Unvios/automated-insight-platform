@@ -116,7 +116,7 @@ const Campaigns = () => {
                         ${campaign.spent.toLocaleString()} / ${campaign.budget.toLocaleString()}
                       </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        {campaign.conversions}
+                        {campaign.conversations}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
