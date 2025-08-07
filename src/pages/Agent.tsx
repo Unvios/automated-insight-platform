@@ -4,9 +4,21 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Bot, MessageSquare, TrendingUp, Clock, Star, History } from 'lucide-react';
+import { ArrowLeft, Settings, Bot, MessageSquare, TrendingUp, Clock, Star, History, Trash2, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/config/api';
 import { conversationsApi } from '@/services/conversations';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // API функция для получения агента
 const fetchAgent = async (id: string): Promise<{
@@ -44,6 +56,7 @@ const fetchAgent = async (id: string): Promise<{
   });
   
   if (!response.ok) {
+    console.log(await response.json())
     throw new Error('Не удалось загрузить агента');
   }
   
@@ -53,6 +66,7 @@ const fetchAgent = async (id: string): Promise<{
 const Agent = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { toast } = useToast();
   const [agent, setAgent] = useState<{
     id: string
     version: number
@@ -81,6 +95,7 @@ const Agent = () => {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [conversations, setConversations] = useState<{
     id: string
     customer: string
@@ -155,6 +170,44 @@ const Agent = () => {
   const handleEditAgent = () => {
     // Переход на страницу редактирования агента
     navigate(`/agents/${id}/test`);
+  };
+
+  const handleDeleteAgent = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(getApiUrl('agents/delete-one'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agentId: id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      toast({
+        title: "Агент удален",
+        description: "Агент успешно удален из системы",
+      });
+
+      // Перенаправляем на страницу со списком агентов
+      navigate('/agents');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось удалить агента';
+      toast({
+        title: "Ошибка удаления",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -253,6 +306,42 @@ const Agent = () => {
                 <Settings className="h-4 w-4 mr-2" />
                 Редактировать агента
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Удалить агента
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Удалить агента "{agent?.name}"?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>Вы уверены, что хотите удалить этого агента? Это действие нельзя отменить.</p>
+                      <p className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+                        <strong>Важно:</strong> Кампании, которым назначен этот агент, продолжат его использовать даже после удаления, до тех пор пока им не будут назначены другие агенты.
+                      </p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAgent}
+                      disabled={isDeleting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Удаление...
+                        </>
+                      ) : (
+                        'Удалить агента'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
 
@@ -305,29 +394,39 @@ const Agent = () => {
             <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Последние разговоры</h3>
               <div className="space-y-4">
-                {conversations.map((conversation) => (
-                  <div key={conversation.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <MessageSquare className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{conversation.customer}</p>
-                        <p className="text-xs text-slate-500">Длительность: {Math.round(conversation.durationMs / 1000)}сек</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        conversation.targetAchieved 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {conversation.targetAchieved ? 'Успех' : 'Неудача'}
-                      </span>
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/conversations/${conversation.id}/call`)}>Посмотреть</Button>
-                    </div>
+                {conversations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageSquare className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">Разговоров пока нет</h4>
+                    <p className="text-slate-600">
+                      Разговоры появятся здесь после первых звонков с участием этого агента
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  conversations.map((conversation) => (
+                    <div key={conversation.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <MessageSquare className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">{conversation.customer}</p>
+                          <p className="text-xs text-slate-500">Длительность: {Math.round(conversation.durationMs / 1000)}сек</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          conversation.targetAchieved 
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {conversation.targetAchieved ? 'Успех' : 'Неудача'}
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/conversations/${conversation.id}/call`)}>Посмотреть</Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

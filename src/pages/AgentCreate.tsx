@@ -228,7 +228,7 @@ const AgentCreate = () => {
 
   const [agentConfig, setAgentConfig] = useState({
     name: 'Оптимус Прайм',
-    role: 'Ты HR-менеджер, который проводит собеседования. Мужчина.',
+    role: 'HR-менеджер, который проводит собеседования. Мужчина.',
     model: 'deepseek/deepseek-chat-v3-0324:free',
     voice: 'Bys_24000',
     systemPrompt: defaultSystemPrompt,

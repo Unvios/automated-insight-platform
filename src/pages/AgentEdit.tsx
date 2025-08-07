@@ -552,9 +552,9 @@ const AgentEdit = () => {
                   <Label htmlFor="name">Имя агента</Label>
                   <Input 
                     id="name" 
-                    value={agent?.name || ''}
-                    disabled
-                    className="bg-slate-50"
+                    value={settings.name}
+                    onChange={(e) => setSettings({...settings, name: e.target.value})}
+                    placeholder="Введите имя агента"
                   />
                 </div>
 

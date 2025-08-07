@@ -59,10 +59,10 @@ export const useCustomers = () => {
         ...(params.segment !== undefined && { segment: params.segment || '' }),
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch customers');
+      setError(err instanceof Error ? err.message : 'Ошибка при получении клиентов');
       toast({
-        title: "Error",
-        description: "Failed to fetch customers",
+        title: "Ошибка",
+        description: "Ошибка при получении клиентов",
         variant: "destructive",
       });
     } finally {
@@ -84,14 +84,14 @@ export const useCustomers = () => {
       const newCustomer = await customersApi.create(data);
       setCustomers(prev => [newCustomer, ...prev]);
       toast({
-        title: "Success",
-        description: "Customer created successfully",
+        title: "Успех",
+        description: "Клиент успешно создан",
       });
       return newCustomer;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create customer';
       toast({
-        title: "Error",
+        title: "Ошибка",
         description: errorMessage,
         variant: "destructive",
       });
@@ -116,14 +116,14 @@ export const useCustomers = () => {
         )
       );
       toast({
-        title: "Success",
-        description: "Customer updated successfully",
+        title: "Успех",
+        description: "Клиент успешно обновлен",
       });
       return updatedCustomer;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update customer';
       toast({
-        title: "Error",
+        title: "Ошибка",
         description: errorMessage,
         variant: "destructive",
       });
@@ -136,13 +136,13 @@ export const useCustomers = () => {
       await customersApi.delete(customerId);
       setCustomers(prev => prev.filter(customer => customer.id !== customerId));
       toast({
-        title: "Success",
-        description: "Customer deleted successfully",
+        title: "Успех",
+        description: "Клиент успешно удален",
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete customer';
       toast({
-        title: "Error",
+        title: "Ошибка",
         description: errorMessage,
         variant: "destructive",
       });
@@ -156,7 +156,7 @@ export const useCustomers = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch customer';
       toast({
-        title: "Error",
+        title: "Ошибка",
         description: errorMessage,
         variant: "destructive",
       });
@@ -176,8 +176,8 @@ export const useCustomers = () => {
       const result = await customersApi.importCsv(file, options);
       
       toast({
-        title: "Import Completed",
-        description: `Imported ${result.importedCount} customers. ${result.skippedCount} skipped.`,
+        title: "Импорт завершен",
+        description: `Импортировано ${result.importedCount} клиентов. ${result.skippedCount} пропущено.`,
       });
 
       if (result.errors.length > 0) {
@@ -189,8 +189,8 @@ export const useCustomers = () => {
     } catch (error) {
       console.error('Failed to import CSV:', error);
       toast({
-        title: "Import Failed",
-        description: error instanceof Error ? error.message : "Failed to import CSV file",
+        title: "Ошибка импорта",
+        description: error instanceof Error ? error.message : "Не удалось импортировать CSV файл",
         variant: "destructive",
       });
       throw error;

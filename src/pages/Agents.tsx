@@ -4,10 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Bot, Settings, Play, Pause, Activity, Loader2 } from 'lucide-react';
+import { Plus, Bot, Settings, Play, Pause, Activity, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiUrl } from '@/config/api';
 import { conversationsApi } from '@/services/conversations';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Интерфейс для агента
 interface Agent {
@@ -63,6 +74,7 @@ const Agents = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingAgentId, setDeletingAgentId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     conversations: 0,
@@ -100,6 +112,44 @@ const Agents = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Функция удаления агента
+  const deleteAgent = async (agentId: string) => {
+    setDeletingAgentId(agentId);
+    
+    try {
+      const response = await fetch(getApiUrl('agents/delete-one'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agentId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      // Удаляем агента из локального состояния
+      setAgents(prev => prev.filter(agent => agent.id !== agentId));
+      setStats(prev => ({ ...prev, total: prev.total - 1 }));
+      
+      toast({
+        title: "Агент удален",
+        description: "Агент успешно удален из системы",
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось удалить агента';
+      toast({
+        title: "Ошибка удаления",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setDeletingAgentId(null);
     }
   };
 
@@ -261,6 +311,49 @@ const Agents = () => {
                         >
                           <Settings className="h-4 w-4" />
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Удалить агента "{agent.name}"?</AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-2">
+                                <p>Вы уверены, что хотите удалить этого агента? Это действие нельзя отменить.</p>
+                                <p className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+                                  <strong>Важно:</strong> Кампании, которым назначен этот агент, продолжат его использовать даже после удаления, до тех пор пока им не будут назначены другие агенты.
+                                </p>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Отмена</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteAgent(agent.id);
+                                }}
+                                disabled={deletingAgentId === agent.id}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                {deletingAgentId === agent.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Удаление...
+                                  </>
+                                ) : (
+                                  'Удалить агента'
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </div>
