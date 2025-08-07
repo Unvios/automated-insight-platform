@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Send, Settings, Bot, MessageSquare, Mic, MicOff, Phone, PhoneOff, Volume2, Brain, Volume2 as Volume2Icon, Wrench } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Settings, ArrowLeft, Bot, Send, Volume2, Phone, PhoneOff, Mic, MicOff, Brain, Volume2 as Volume2Icon, Wrench, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAgentTester } from '@/hooks/useAgentTester';
 import { getApiUrl } from '@/config/api';
@@ -635,6 +636,10 @@ const AgentEdit = () => {
                   {functionsExpanded && (
                     <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-gray-700 mb-4">
+                        Здесь приведён список доступных функций, которые можно дать LLM (Large Language Model, Большая Языковая Модель) для использования. Вы можете выбрать одну или несколько функций и добавить их в системный промпт. Таким образом LLM сможет использовать эти функции для выполнения задач, например, сможет попросить сервис найти клиента в базе данных.
+                      </p>
+
+                      <p className="text-sm text-gray-700 mb-4">
                         <strong>Как использовать:</strong> В системном промпте указывайте функции в двойных квадратных скобках [[tool]].
                       </p>
                       
@@ -704,6 +709,29 @@ const AgentEdit = () => {
                     <Label htmlFor="ssmlEnabled" className="text-sm font-normal cursor-pointer">
                       Использовать SSML (Speech Synthesis Markup Language)
                     </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-2">
+                            <p className="font-medium">SSML (Speech Synthesis Markup Language)</p>
+                            <p>Язык разметки синтеза речи. Позволяет настраивать преобразование текста в речь и делает речь более естественной и выразительной.</p>
+                            <p className="text-xs">
+                              <a 
+                                href="https://developers.sber.ru/docs/ru/salutespeech/guides/synthesis/ssml" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Подробнее в документации
+                              </a>
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   {settings.ssmlEnabled && (
                     <div>
@@ -728,8 +756,31 @@ const AgentEdit = () => {
                       onCheckedChange={(checked) => setVadConfigEnabled(!!checked)}
                     />
                     <Label htmlFor="vadConfigEnabled" className="text-sm font-normal cursor-pointer">
-                      Использовать VAD Configuration (Voice Activity Detection)
+                      Использовать настройки VAD
                     </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <div className="space-y-2">
+                            <p className="font-medium">VAD (Voice Activity Detection)</p>
+                            <p>Определение активности голоса. Позволяет определить, когда человек говорит, а когда молчит.</p>
+                            <p className="text-xs">
+                              <a 
+                                href="https://docs.livekit.io/agents/build/turns/vad/#configuration" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Подробнее о параметрах
+                              </a>
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   
                   {vadConfigEnabled && (
