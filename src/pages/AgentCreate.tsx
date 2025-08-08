@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import { MicrophoneTest } from '@/components/MicrophoneTest';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,9 +59,8 @@ const AgentCreate = () => {
   const [testMessage, setTestMessage] = useState('');
   const [testResponse, setTestResponse] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [showStatistics, setShowStatistics] = useState(true); // По умолчанию включен
-  const [functionsExpanded, setFunctionsExpanded] = useState(false); // По умолчанию свернут
-  // const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('');
+  const [showStatistics, setShowStatistics] = useState(true);
+  const [functionsExpanded, setFunctionsExpanded] = useState(false);
 
   // Список доступных функций LLM
   const availableTools = [
@@ -83,7 +83,7 @@ const AgentCreate = () => {
       example: '[[getCustomerVacancies]]'
     }
   ];
-  
+
   // Ref для прокрутки чата в конец
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -854,21 +854,8 @@ loudness="high">песиков?</paint></speak>
                 </div>
                 
                 <div className="space-y-4 mb-4">
-                  {/*<div>
-                    <Label>Knowledge Base</Label>
-                    <Select value={selectedKnowledgeBase} onValueChange={setSelectedKnowledgeBase}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select knowledge base" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {knowledgeBases.map((kb) => (
-                          <SelectItem key={kb.id} value={kb.id}>
-                            {kb.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>*/}
+                  {/* Тест микрофона */}
+                  <MicrophoneTest />
                   
                   <Button 
                     onClick={handleCall} 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import { MicrophoneTest } from '@/components/MicrophoneTest';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -905,6 +906,9 @@ const AgentEdit = () => {
                 </div>
                 
                 <div className="space-y-4 mb-4">
+                  {/* Тест микрофона */}
+                  <MicrophoneTest />
+                  
                   <Button 
                     onClick={handleCall} 
                     className={`w-full ${isConnected ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
