@@ -70,8 +70,8 @@ const CampaignEdit = () => {
       const campaignData = {
         name: formData.get('name') as string,
         description: formData.get('description') as string,
-        budget: Number(formData.get('budget')),
-        durationMs: Number(formData.get('duration')) * 24 * 60 * 60 * 1000, // конвертируем дни в миллисекунды
+        // budget: Number(formData.get('budget')),
+        // durationMs: Number(formData.get('duration')) * 24 * 60 * 60 * 1000, // конвертируем дни в миллисекунды
         ...(targetAudience && { targetAudience }),
         ...(agentId && { agentId }),
         ...(knowledgeBaseId ? { knowledgeBaseId } : { knowledgeBaseId: null }),
@@ -179,7 +179,7 @@ const CampaignEdit = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="budget">Бюджет</Label>
                   <Input 
@@ -202,7 +202,7 @@ const CampaignEdit = () => {
                     required 
                   />
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <Label htmlFor="target">Целевая аудитория (сегмент)</Label>

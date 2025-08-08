@@ -269,13 +269,12 @@ const Campaign = () => {
                   <p className="text-sm text-slate-600">Дата начала</p>
                   <p className="text-sm font-medium text-slate-900">{new Date(campaign.createdAt).toLocaleDateString('ru-RU')}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-sm text-slate-600">Дата окончания</p>
                   <p className="text-sm font-medium text-slate-900">
                     {new Date(new Date(campaign.createdAt).getTime() + Number(campaign.durationMs)).toLocaleDateString('ru-RU')}
-                    {/* {new Date(campaign.createdAt).getTime() + Number()} */}
                   </p>
-                </div>
+                </div> */}
                 <div>
                   <p className="text-sm text-slate-600">Целевая аудитория</p>
                   <p className="text-sm font-medium text-slate-900">

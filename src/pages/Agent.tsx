@@ -298,10 +298,10 @@ const Agent = () => {
               <p className="text-slate-600">Панель управления</p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" onClick={handleVersionHistory}>
+              {/* <Button variant="outline" onClick={handleVersionHistory}>
                 <History className="h-4 w-4 mr-2" />
                 История версий
-              </Button>
+              </Button> */}
               <Button variant="outline" onClick={handleEditAgent}>
                 <Settings className="h-4 w-4 mr-2" />
                 Редактировать агента
